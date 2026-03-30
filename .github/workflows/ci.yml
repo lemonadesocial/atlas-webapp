@@ -17,10 +17,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci || npm install
-
-      - name: Install platform-specific vitest dependencies
-        run: npm install @rolldown/binding-linux-x64-gnu --no-save 2>/dev/null || true
+      - run: npm install
 
       - name: Lint
         run: npm run lint

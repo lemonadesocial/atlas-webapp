@@ -146,6 +146,10 @@ export function TicketSection({
         if (!checkoutRes.ok) throw new Error("Failed to create checkout");
         const checkout: CheckoutSession = await checkoutRes.json();
         setPurchaseState("redirecting");
+        // M6: Validate checkout URL origin
+        if (!checkout.checkout_url.startsWith("https://checkout.stripe.com/")) {
+          throw new Error("Invalid checkout URL");
+        }
         window.location.href = checkout.checkout_url;
       } else if (holdRes.ok) {
         // Free ticket RSVP
@@ -288,9 +292,12 @@ export function TicketSection({
                 )}
               </div>
               {soldOut ? (
-                <span className="rounded-full bg-danger/10 px-3 py-1 text-xs font-medium text-danger">
-                  {STRINGS.soldOut}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="rounded-full bg-danger/10 px-3 py-1 text-xs font-medium text-danger">
+                    {STRINGS.soldOut}
+                  </span>
+                  {/* L5: TODO -- add "Notify Me" option for sold-out events */}
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <button
@@ -338,6 +345,7 @@ export function TicketSection({
             placeholder="Your name"
             value={attendeeName}
             onChange={(e) => setAttendeeName(e.target.value)}
+            aria-label="Attendee name"
             className="w-full rounded-md border border-card-border bg-card px-3 py-2 text-sm text-primary placeholder:text-quaternary focus:border-accent focus:outline-none"
           />
           <input
@@ -345,6 +353,7 @@ export function TicketSection({
             placeholder="Your email"
             value={attendeeEmail}
             onChange={(e) => setAttendeeEmail(e.target.value)}
+            aria-label="Attendee email"
             className="w-full rounded-md border border-card-border bg-card px-3 py-2 text-sm text-primary placeholder:text-quaternary focus:border-accent focus:outline-none"
           />
         </div>

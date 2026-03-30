@@ -44,6 +44,12 @@ export function Navbar() {
           >
             Explore
           </Link>
+          <span
+            className="text-sm text-quaternary cursor-default"
+            title="Coming soon"
+          >
+            Leaderboard
+          </span>
           <Link
             href="/docs"
             className="text-sm text-secondary transition-colors hover:text-primary"
@@ -149,6 +155,9 @@ export function Navbar() {
             >
               Explore
             </Link>
+            <span className="rounded-md px-3 py-2 text-sm text-quaternary">
+              Leaderboard (coming soon)
+            </span>
             <Link
               href="/docs"
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"

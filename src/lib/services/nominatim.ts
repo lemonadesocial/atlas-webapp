@@ -41,6 +41,7 @@ export async function searchCities(
     headers: {
       "User-Agent": "atlas-webapp",
     },
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!res.ok) return [];

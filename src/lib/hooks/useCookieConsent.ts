@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { getItem, setItem } from "@/lib/utils/storage";
 
 type ConsentState = "undecided" | "accepted" | "rejected";
 
@@ -11,7 +12,7 @@ export function useCookieConsent() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = getItem(STORAGE_KEY);
     if (stored === "accepted" || stored === "rejected") {
       setConsent(stored);
     }
@@ -19,12 +20,12 @@ export function useCookieConsent() {
   }, []);
 
   const accept = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, "accepted");
+    setItem(STORAGE_KEY, "accepted");
     setConsent("accepted");
   }, []);
 
   const reject = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, "rejected");
+    setItem(STORAGE_KEY, "rejected");
     setConsent("rejected");
   }, []);
 

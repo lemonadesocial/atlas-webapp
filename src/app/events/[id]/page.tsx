@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { SITE_URL, STRINGS } from "@/lib/utils/constants";
+import { SITE_URL, STRINGS, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
+import { validateEventId } from "@/lib/utils/escape";
 import { EventDetailContent } from "@/components/event/EventDetailContent";
 import { EventJsonLd } from "./EventJsonLd";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 
 interface PageProps {
   params: { id: string };
 }
 
 async function fetchEvent(id: string) {
+  if (!validateEventId(id)) return null;
   try {
-    const res = await fetch(`${BACKEND_URL}/atlas/v1/events/${id}`, {
+    const res = await fetch(`${LEMONADE_BACKEND_URL}/atlas/v1/events/${id}`, {
       headers: {
         "Atlas-Agent-Id": "web:atlas-webapp",
         "Atlas-Version": "1.0",
@@ -40,7 +40,7 @@ export async function generateMetadata({
       `${event.title} on ${STRINGS.siteName}`,
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      type: "article",
+      type: "website",
       title: event.title,
       description: event.description?.slice(0, 160) || event.title,
       url: canonicalUrl,

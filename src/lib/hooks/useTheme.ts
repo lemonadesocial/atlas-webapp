@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { getItem, setItem } from "@/lib/utils/storage";
 
 type Theme = "dark" | "light";
 
@@ -8,7 +9,7 @@ export function useTheme() {
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    const stored = localStorage.getItem("atlas_theme") as Theme | null;
+    const stored = getItem("atlas_theme") as Theme | null;
     if (stored) {
       setThemeState(stored);
       document.documentElement.classList.toggle("light", stored === "light");
@@ -20,7 +21,7 @@ export function useTheme() {
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
-    localStorage.setItem("atlas_theme", t);
+    setItem("atlas_theme", t);
     document.documentElement.classList.toggle("light", t === "light");
   }, []);
 

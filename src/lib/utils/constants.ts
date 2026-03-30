@@ -1,13 +1,27 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://atlas.lemonade.social";
 
-export const ATLAS_REGISTRY_URL =
-  process.env.NEXT_PUBLIC_ATLAS_REGISTRY_URL ||
-  "https://registry.atlas-protocol.org";
+// M1: Validate at first use (not module load) so tests can set env vars
+let _registryUrl: string | undefined;
+export function getRegistryUrl(): string {
+  if (_registryUrl) return _registryUrl;
+  _registryUrl = process.env.NEXT_PUBLIC_ATLAS_REGISTRY_URL;
+  if (!_registryUrl) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_ATLAS_REGISTRY_URL"
+    );
+  }
+  return _registryUrl;
+}
 
+// For static imports that need a string value (sitemap, etc.)
+export const ATLAS_REGISTRY_URL =
+  process.env.NEXT_PUBLIC_ATLAS_REGISTRY_URL || "";
+
+// M4: Backend URL is server-only (used in API routes and SSR).
+// Client components must use /api/atlas/ BFF routes.
 export const LEMONADE_BACKEND_URL =
-  process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL ||
-  "https://backend.lemonade.social";
+  process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 
 export const NOMINATIM_URL =
   process.env.NEXT_PUBLIC_NOMINATIM_URL ||
@@ -47,6 +61,13 @@ export const DATE_FILTERS = [
   { value: "weekend", label: "This Weekend" },
   { value: "week", label: "This Week" },
   { value: "month", label: "This Month" },
+] as const;
+
+export const PRICE_MODES = [
+  { value: "", label: "Any Price" },
+  { value: "free", label: "Free" },
+  { value: "paid", label: "Paid" },
+  { value: "range", label: "Custom Range" },
 ] as const;
 
 // User-facing strings (centralized for future i18n)
@@ -106,4 +127,6 @@ export const STRINGS = {
   shareLink: "Copy link",
   shareTwitter: "Twitter",
   shareWhatsApp: "WhatsApp",
+  locationUnavailable: "Location not available. Enter a city manually.",
+  locationDenied: "Location access denied. Enter a city manually.",
 } as const;

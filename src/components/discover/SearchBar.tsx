@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, FormEvent } from "react";
+import { useRef, useEffect, FormEvent } from "react";
 import { STRINGS } from "@/lib/utils/constants";
 
 interface SearchBarProps {
@@ -10,11 +10,32 @@ interface SearchBarProps {
 
 export function SearchBar({ defaultValue = "", onSearch }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    clearTimeout(debounceRef.current);
     onSearch(inputRef.current?.value.trim() ?? "");
   };
+
+  // H4: 300ms debounce on input for search preview
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const handler = () => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        onSearch(input.value.trim());
+      }, 300);
+    };
+
+    input.addEventListener("input", handler);
+    return () => {
+      input.removeEventListener("input", handler);
+      clearTimeout(debounceRef.current);
+    };
+  }, [onSearch]);
 
   return (
     <form onSubmit={handleSubmit} className="w-full">

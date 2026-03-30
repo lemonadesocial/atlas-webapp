@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/utils/constants";
+import { safeJsonLd } from "@/lib/utils/escape";
 
 interface EventJsonLdProps {
   event: {
@@ -61,7 +62,7 @@ export function EventJsonLd({ event, eventId }: EventJsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
     />
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type L from "leaflet";
 import type { AtlasSearchResultItem } from "@/lib/types/atlas";
 import { formatPriceRange, formatDateShort } from "@/lib/utils/format";
+import { escapeHtml } from "@/lib/utils/escape";
 
 interface MapViewProps {
   results: AtlasSearchResultItem[];
@@ -13,8 +15,65 @@ export function MapView({ results, center }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const mapInstanceRef = useRef<unknown>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const leafletRef = useRef<typeof L | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
 
+  const updateMarkers = useCallback(
+    (Leaf: typeof L, map: L.Map, items: AtlasSearchResultItem[]) => {
+      if (markersRef.current) {
+        markersRef.current.clearLayers();
+      } else {
+        markersRef.current = Leaf.layerGroup().addTo(map);
+      }
+
+      const icon = Leaf.divIcon({
+        className: "atlas-marker",
+        html: '<div style="background:#a78bfa;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+
+      const coords: Array<[number, number]> = [];
+
+      items.forEach((item) => {
+        const { event } = item;
+        if (event.latitude && event.longitude) {
+          coords.push([event.latitude, event.longitude]);
+          const marker = Leaf.marker([event.latitude, event.longitude], {
+            icon,
+            title: event.title,
+          });
+
+          const safeTitle = escapeHtml(event.title);
+          const safeDate = escapeHtml(formatDateShort(event.start));
+          const safePrice = escapeHtml(
+            formatPriceRange(event.min_price, event.max_price, event.currency)
+          );
+          const safeId = escapeHtml(event.id || "");
+
+          marker.bindPopup(
+            `<div style="min-width:180px">
+              <strong>${safeTitle}</strong><br/>
+              <span style="font-size:12px;color:#888">${safeDate}</span><br/>
+              <span style="font-size:12px">${safePrice}</span><br/>
+              ${safeId ? `<a href="/events/${safeId}" style="font-size:12px;color:#a78bfa">View details</a>` : ""}
+            </div>`
+          );
+
+          markersRef.current!.addLayer(marker);
+        }
+      });
+
+      if (coords.length > 0) {
+        const bounds = Leaf.latLngBounds(coords);
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      }
+    },
+    []
+  );
+
+  // Initialize map once
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -22,64 +81,28 @@ export function MapView({ results, center }: MapViewProps) {
 
     async function initMap() {
       try {
-        // Dynamic import for Leaflet (client-side only)
-        const L = (await import("leaflet")).default;
+        const Leaf = (await import("leaflet")).default;
         await import("leaflet/dist/leaflet.css");
 
         if (cancelled || !mapRef.current) return;
 
         const defaultCenter = center || { lat: 48.8566, lng: 2.3522 };
-        const map = L.map(mapRef.current).setView(
+        const map = Leaf.map(mapRef.current).setView(
           [defaultCenter.lat, defaultCenter.lng],
           center ? 12 : 3
         );
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        Leaf.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 18,
         }).addTo(map);
 
-        // Custom marker icon
-        const icon = L.divIcon({
-          className: "atlas-marker",
-          html: '<div style="background:#a78bfa;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>',
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-        });
-
-        const markers: Array<{ lat: number; lng: number }> = [];
-
-        results.forEach((item) => {
-          const { event } = item;
-          if (event.latitude && event.longitude) {
-            markers.push({ lat: event.latitude, lng: event.longitude });
-            const marker = L.marker([event.latitude, event.longitude], {
-              icon,
-              title: event.title,
-            }).addTo(map);
-
-            marker.bindPopup(
-              `<div style="min-width:180px">
-                <strong>${event.title}</strong><br/>
-                <span style="font-size:12px;color:#888">${formatDateShort(event.start)}</span><br/>
-                <span style="font-size:12px">${formatPriceRange(event.min_price, event.max_price, event.currency)}</span><br/>
-                <a href="/events/${event.id}" style="font-size:12px;color:#a78bfa">View details</a>
-              </div>`
-            );
-          }
-        });
-
-        // Auto-fit bounds
-        if (markers.length > 0) {
-          const bounds = L.latLngBounds(
-            markers.map((m) => [m.lat, m.lng])
-          );
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-        }
-
         mapInstanceRef.current = map;
+        leafletRef.current = Leaf;
         setLoading(false);
+
+        updateMarkers(Leaf, map, results);
       } catch {
         setError(true);
         setLoading(false);
@@ -91,11 +114,27 @@ export function MapView({ results, center }: MapViewProps) {
     return () => {
       cancelled = true;
       if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
+        mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        markersRef.current = null;
       }
     };
-  }, [results, center]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update markers when results change
+  useEffect(() => {
+    if (mapInstanceRef.current && leafletRef.current) {
+      updateMarkers(leafletRef.current, mapInstanceRef.current, results);
+    }
+  }, [results, updateMarkers]);
+
+  // Re-center when center prop changes
+  useEffect(() => {
+    if (mapInstanceRef.current && center) {
+      mapInstanceRef.current.setView([center.lat, center.lng], 12);
+    }
+  }, [center]);
 
   if (error) {
     return (

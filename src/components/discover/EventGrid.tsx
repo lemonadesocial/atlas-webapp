@@ -14,6 +14,7 @@ interface EventGridProps {
   hasNext: boolean;
   onLoadMore: () => void;
   onRetry: () => void;
+  onSuggestionClick?: (query: string) => void;
 }
 
 export function EventGrid({
@@ -24,6 +25,7 @@ export function EventGrid({
   hasNext,
   onLoadMore,
   onRetry,
+  onSuggestionClick,
 }: EventGridProps) {
   if (error) {
     return (
@@ -58,12 +60,14 @@ export function EventGrid({
         <p className="text-sm text-secondary">{STRINGS.noEventsFound}</p>
         <div className="flex gap-2">
           {["Music in Berlin", "Tech events", "Free this weekend"].map((q) => (
-            <span
+            <button
               key={q}
-              className="rounded-full bg-chip-bg px-3 py-1 text-xs text-tertiary"
+              type="button"
+              onClick={() => onSuggestionClick?.(q)}
+              className="rounded-full bg-chip-bg px-3 py-1 text-xs text-tertiary transition-colors hover:bg-card-hover hover:text-secondary"
             >
               {q}
-            </span>
+            </button>
           ))}
         </div>
       </div>

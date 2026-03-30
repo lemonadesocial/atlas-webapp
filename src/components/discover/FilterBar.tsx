@@ -8,6 +8,8 @@ import {
   SOURCE_PLATFORMS,
   DATE_FILTERS,
   SORT_OPTIONS,
+  PRICE_MODES,
+  STRINGS,
 } from "@/lib/utils/constants";
 import { searchCities, getCityName, type NominatimResult } from "@/lib/services/nominatim";
 
@@ -16,9 +18,11 @@ export interface FilterValues {
   city: string;
   lat?: number;
   lng?: number;
-  category: string;
+  categories: string[];
   source_platform: string;
-  free_only: boolean;
+  priceMode: string;
+  price_min?: number;
+  price_max?: number;
   sort: string;
 }
 
@@ -28,16 +32,13 @@ interface FilterBarProps {
   onClear: () => void;
 }
 
-const categoryOptions = [
-  { value: "", label: "All Categories" },
-  ...CATEGORIES.map((c) => ({ value: c.toLowerCase(), label: c })),
-];
-
 export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cityInput, setCityInput] = useState(values.city);
   const [citySuggestions, setCitySuggestions] = useState<NominatimResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   useEffect(() => {
     if (cityInput.length < 2) {
@@ -48,13 +49,38 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
       const results = await searchCities(cityInput);
       setCitySuggestions(results);
       setShowSuggestions(true);
-    }, 1000); // 1s debounce per Nominatim policy
+    }, 1000);
     return () => clearTimeout(timer);
   }, [cityInput]);
 
+  // M13: IP-based geolocation fallback
+  const ipFallback = async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/", {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.city && data.latitude && data.longitude) {
+        onChange({
+          ...values,
+          city: data.city,
+          lat: data.latitude,
+          lng: data.longitude,
+        });
+        setCityInput(data.city);
+        setLocationError("");
+      }
+    } catch {
+      // IP geolocation also failed, leave empty
+    }
+  };
+
   const handleNearMe = () => {
+    setLocationError("");
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+      setLocationError(STRINGS.locationUnavailable);
+      ipFallback();
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -68,7 +94,8 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
         setCityInput("Near me");
       },
       () => {
-        alert("Location access denied. Please enter a city manually.");
+        setLocationError(STRINGS.locationDenied);
+        ipFallback();
       }
     );
   };
@@ -85,12 +112,20 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
     });
   };
 
+  const toggleCategory = (cat: string) => {
+    const current = values.categories;
+    const next = current.includes(cat)
+      ? current.filter((c) => c !== cat)
+      : [...current, cat];
+    onChange({ ...values, categories: next });
+  };
+
   const hasActiveFilters =
     values.dateFilter ||
     values.city ||
-    values.category ||
+    values.categories.length > 0 ||
     values.source_platform ||
-    values.free_only ||
+    values.priceMode ||
     values.sort;
 
   const filterContent = (
@@ -105,7 +140,7 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
         }
       />
 
-      {/* City with autocomplete */}
+      {/* City with autocomplete (L14: ARIA combobox) */}
       <div className="relative flex flex-col gap-1">
         <label htmlFor="city-filter" className="text-sm text-secondary">
           Location
@@ -117,6 +152,7 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
             value={cityInput}
             onChange={(e) => {
               setCityInput(e.target.value);
+              setLocationError("");
               if (!e.target.value) {
                 onChange({ ...values, city: "", lat: undefined, lng: undefined });
               }
@@ -124,7 +160,11 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
             onFocus={() => citySuggestions.length > 0 && setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             placeholder="City..."
-            className="w-32 rounded-md border border-card-border bg-card px-3 py-2 text-sm text-primary placeholder:text-quaternary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
+            className="w-44 rounded-md border border-card-border bg-card px-3 py-2 text-sm text-primary placeholder:text-quaternary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
+            role="combobox"
+            aria-expanded={showSuggestions && citySuggestions.length > 0}
+            aria-autocomplete="list"
+            aria-controls="city-suggestions"
             aria-label="Filter by city"
             autoComplete="off"
           />
@@ -148,10 +188,17 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
             </svg>
           </button>
         </div>
+        {locationError && (
+          <p className="text-xs text-warning">{locationError}</p>
+        )}
         {showSuggestions && citySuggestions.length > 0 && (
-          <ul className="absolute left-0 top-full z-20 mt-1 max-h-48 w-64 overflow-y-auto rounded-md border border-card-border bg-overlay-primary shadow-lg">
+          <ul
+            id="city-suggestions"
+            role="listbox"
+            className="absolute left-0 top-full z-20 mt-1 max-h-48 w-64 overflow-y-auto rounded-md border border-card-border bg-overlay-primary shadow-lg"
+          >
             {citySuggestions.map((r) => (
-              <li key={r.place_id}>
+              <li key={r.place_id} role="option" aria-selected={false}>
                 <button
                   type="button"
                   className="w-full px-3 py-2 text-left text-sm text-secondary hover:bg-card-hover"
@@ -165,15 +212,46 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
         )}
       </div>
 
-      <Select
-        id="category-filter"
-        label="Category"
-        options={categoryOptions}
-        value={values.category}
-        onChange={(e) =>
-          onChange({ ...values, category: e.target.value })
-        }
-      />
+      {/* M14: Multi-select category */}
+      <div className="relative flex flex-col gap-1">
+        <label className="text-sm text-secondary">Category</label>
+        <button
+          type="button"
+          onClick={() => setCategoryOpen(!categoryOpen)}
+          className="flex items-center gap-2 rounded-md border border-card-border bg-card px-3 py-2 text-sm text-primary"
+          aria-expanded={categoryOpen}
+          aria-haspopup="listbox"
+        >
+          {values.categories.length > 0
+            ? `${values.categories.length} selected`
+            : "All Categories"}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        {categoryOpen && (
+          <div
+            className="absolute left-0 top-full z-20 mt-1 max-h-48 w-48 overflow-y-auto rounded-md border border-card-border bg-overlay-primary shadow-lg"
+            role="listbox"
+            aria-multiselectable="true"
+          >
+            {CATEGORIES.map((cat) => (
+              <label
+                key={cat}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-secondary hover:bg-card-hover cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={values.categories.includes(cat.toLowerCase())}
+                  onChange={() => toggleCategory(cat.toLowerCase())}
+                  className="accent-accent"
+                />
+                {cat}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Select
         id="source-filter"
@@ -185,20 +263,61 @@ export function FilterBar({ values, onChange, onClear }: FilterBarProps) {
         }
       />
 
+      {/* H3: Price filter with Free/Paid/Range */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-secondary">Price</label>
-        <label className="flex items-center gap-2 rounded-md border border-card-border bg-card px-3 py-2 text-sm">
-          <input
-            type="checkbox"
-            checked={values.free_only}
-            onChange={(e) =>
-              onChange({ ...values, free_only: e.target.checked })
-            }
-            className="accent-accent"
-          />
-          <span className="text-secondary">Free only</span>
-        </label>
+        <Select
+          id="price-mode"
+          label="Price"
+          options={[...PRICE_MODES]}
+          value={values.priceMode}
+          onChange={(e) =>
+            onChange({
+              ...values,
+              priceMode: e.target.value,
+              price_min: undefined,
+              price_max: undefined,
+            })
+          }
+        />
       </div>
+      {values.priceMode === "range" && (
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="price-min" className="text-sm text-secondary">Min</label>
+            <input
+              id="price-min"
+              type="number"
+              min="0"
+              placeholder="0"
+              value={values.price_min ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...values,
+                  price_min: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+              className="w-20 rounded-md border border-card-border bg-card px-2 py-2 text-sm text-primary focus:border-accent focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="price-max" className="text-sm text-secondary">Max</label>
+            <input
+              id="price-max"
+              type="number"
+              min="0"
+              placeholder="Any"
+              value={values.price_max ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...values,
+                  price_max: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+              className="w-20 rounded-md border border-card-border bg-card px-2 py-2 text-sm text-primary focus:border-accent focus:outline-none"
+            />
+          </div>
+        </div>
+      )}
 
       <Select
         id="sort-filter"

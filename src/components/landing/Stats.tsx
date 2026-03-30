@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getStatsFallback } from "@/lib/services/atlas-client";
+import { getItem, setItem } from "@/lib/utils/storage";
 
 interface StatsData {
   totalEvents: number;
@@ -24,7 +25,7 @@ export function Stats() {
   const [usedFallback, setUsedFallback] = useState(true);
 
   useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = getItem(CACHE_KEY);
     if (cached) {
       try {
         const { data, timestamp } = JSON.parse(cached);
@@ -38,12 +39,8 @@ export function Stats() {
       }
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-
     getStatsFallback()
       .then((data) => {
-        clearTimeout(timeout);
         if (data.totalEvents > 0) {
           const newStats: StatsData = {
             totalEvents: data.totalEvents,
@@ -52,14 +49,13 @@ export function Stats() {
           };
           setStats(newStats);
           setUsedFallback(false);
-          localStorage.setItem(
+          setItem(
             CACHE_KEY,
             JSON.stringify({ data: newStats, timestamp: Date.now() })
           );
         }
       })
       .catch(() => {
-        clearTimeout(timeout);
         // Keep fallback values
       });
   }, []);
@@ -78,7 +74,7 @@ export function Stats() {
   return (
     <section className="px-4 py-20">
       <div className="mx-auto max-w-3xl">
-        <div className="grid grid-cols-3 gap-8 text-center">
+        <div className="grid grid-cols-1 gap-8 text-center sm:grid-cols-3">
           {items.map((item) => (
             <div key={item.label}>
               <div className="font-display text-3xl font-bold text-primary sm:text-4xl">

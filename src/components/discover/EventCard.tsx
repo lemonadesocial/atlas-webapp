@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
@@ -10,7 +11,7 @@ interface EventCardProps {
   event: AtlasEvent;
 }
 
-export function EventCard({ event }: EventCardProps) {
+export const EventCard = memo(function EventCard({ event }: EventCardProps) {
   const isExternal =
     event.source_platform !== "lemonade" && event.url && !event.id;
   const href = isExternal ? event.url! : `/events/${event.id}`;
@@ -24,7 +25,6 @@ export function EventCard({ event }: EventCardProps) {
       rel={rel}
       className="group flex flex-col overflow-hidden rounded-lg border border-card-border bg-card backdrop-blur-lg transition-colors hover:border-card-border-hover hover:bg-card-hover"
     >
-      {/* Image */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-accent/20 to-accent/5">
         {event.image_url ? (
           <Image
@@ -37,15 +37,7 @@ export function EventCard({ event }: EventCardProps) {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              className="text-quaternary"
-            >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-quaternary">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -55,14 +47,11 @@ export function EventCard({ event }: EventCardProps) {
         )}
       </div>
 
-      {/* Content */}
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="line-clamp-2 text-sm font-semibold text-primary">
           {event.title}
         </h3>
-        <p className="text-xs text-tertiary">
-          {formatDate(event.start)}
-        </p>
+        <p className="text-xs text-tertiary">{formatDate(event.start)}</p>
         {event.city && (
           <p className="text-xs text-tertiary">
             {event.city}
@@ -78,4 +67,4 @@ export function EventCard({ event }: EventCardProps) {
       </div>
     </Link>
   );
-}
+});

@@ -22,9 +22,15 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error) {
-    // Sentry capture would go here
-    console.error("ErrorBoundary caught:", error);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Dynamic import to avoid pulling server-side Sentry into the client bundle
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        extra: { componentStack: errorInfo.componentStack },
+      });
+    }).catch(() => {
+      // Sentry not available -- no-op
+    });
   }
 
   render() {

@@ -1,14 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validatePathSegments } from "@/lib/utils/escape";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
+const BACKEND_URL = process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
+const MAX_BODY_SIZE = 1024 * 1024; // 1MB
+
+function reject(reason: string, status: number = 400) {
+  return NextResponse.json({ error: reason }, { status });
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  const path = params.path.join("/");
-  const url = `${BACKEND_URL}/atlas/v1/${path}${request.nextUrl.search}`;
+  if (!validatePathSegments(params.path)) {
+    return reject("Invalid path");
+  }
 
+  const path = params.path.join("/");
+  const constructed = `/atlas/v1/${path}`;
+
+  if (!constructed.startsWith("/atlas/v1/")) {
+    return reject("Invalid path");
+  }
+
+  const url = `${BACKEND_URL}${constructed}${request.nextUrl.search}`;
+
+  // TODO: Add rate limiting middleware or WAF for production (M3)
   try {
     const res = await fetch(url, {
       headers: {
@@ -26,10 +43,7 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Backend request failed" },
-      { status: 502 }
-    );
+    return reject("Backend request failed", 502);
   }
 }
 
@@ -37,11 +51,30 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
+  if (!validatePathSegments(params.path)) {
+    return reject("Invalid path");
+  }
+
   const path = params.path.join("/");
-  const url = `${BACKEND_URL}/atlas/v1/${path}`;
+  const constructed = `/atlas/v1/${path}`;
+
+  if (!constructed.startsWith("/atlas/v1/")) {
+    return reject("Invalid path");
+  }
+
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    return reject("Request body too large", 413);
+  }
+
+  const url = `${BACKEND_URL}${constructed}`;
 
   try {
     const body = await request.text();
+    if (body.length > MAX_BODY_SIZE) {
+      return reject("Request body too large", 413);
+    }
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -61,9 +94,6 @@ export async function POST(
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Backend request failed" },
-      { status: 502 }
-    );
+    return reject("Backend request failed", 502);
   }
 }

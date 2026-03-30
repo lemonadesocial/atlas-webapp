@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
@@ -10,6 +10,7 @@ import { TicketSection } from "./TicketSection";
 import { ShareButton } from "./ShareButton";
 import { formatDate } from "@/lib/utils/format";
 import { SITE_URL } from "@/lib/utils/constants";
+import { validateEventId } from "@/lib/utils/escape";
 import type { AtlasEventDetail, TicketType } from "@/lib/types/atlas";
 
 interface Props {
@@ -22,12 +23,17 @@ export function EventDetailContent({ eventId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(async (retry = true) => {
+    if (!validateEventId(eventId)) {
+      setError("not_found");
+      setLoading(false);
+      return;
+    }
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
+
+    const attempt = async (): Promise<boolean> => {
       try {
         const [eventRes, ticketsRes] = await Promise.allSettled([
           fetch(`/api/atlas/events/${eventId}`).then((r) => {
@@ -40,35 +46,40 @@ export function EventDetailContent({ eventId }: Props) {
           }),
         ]);
 
-        if (cancelled) return;
-
         if (eventRes.status === "rejected") {
           if (eventRes.reason?.message?.includes("404")) {
             setError("not_found");
-          } else {
-            setError("Failed to load event. Please try again.");
+            setLoading(false);
+            return true;
           }
-          setLoading(false);
-          return;
+          return false;
         }
 
         setEvent(eventRes.value);
         if (ticketsRes.status === "fulfilled") {
           setTickets(ticketsRes.value.ticket_types || []);
         }
+        setLoading(false);
+        return true;
       } catch {
-        if (!cancelled) {
-          setError("Failed to load event. Please try again.");
-        }
+        return false;
       }
-      if (!cancelled) setLoading(false);
-    }
-
-    load();
-    return () => {
-      cancelled = true;
     };
+
+    // M20: Automatic retry once before showing error
+    let success = await attempt();
+    if (!success && retry) {
+      success = await attempt();
+    }
+    if (!success) {
+      setError("Failed to load event. Please try again.");
+      setLoading(false);
+    }
   }, [eventId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (loading) return <EventDetailSkeleton />;
 
@@ -87,7 +98,7 @@ export function EventDetailContent({ eventId }: Props) {
     return (
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 px-4 py-20">
         <p className="text-sm text-danger">{error}</p>
-        <Button variant="secondary" onClick={() => window.location.reload()}>
+        <Button variant="secondary" onClick={() => load(false)}>
           Try again
         </Button>
       </div>
@@ -112,15 +123,7 @@ export function EventDetailContent({ eventId }: Props) {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              className="text-quaternary"
-            >
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-quaternary">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -131,7 +134,6 @@ export function EventDetailContent({ eventId }: Props) {
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-3">
-        {/* Main content */}
         <div className="lg:col-span-2">
           <h1 className="font-display text-3xl font-bold text-primary">
             {event.title}
@@ -139,15 +141,7 @@ export function EventDetailContent({ eventId }: Props) {
 
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-secondary">
             <span className="flex items-center gap-1.5">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-tertiary"
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-tertiary">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -157,15 +151,7 @@ export function EventDetailContent({ eventId }: Props) {
             </span>
             {event.location && (
               <span className="flex items-center gap-1.5">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="text-tertiary"
-                >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-tertiary">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
@@ -175,7 +161,7 @@ export function EventDetailContent({ eventId }: Props) {
             )}
           </div>
 
-          {/* Organizer */}
+          {/* L4: Organizer with verified badge */}
           {event.organizer_name && (
             <div className="mt-4 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-medium text-accent">
@@ -184,27 +170,24 @@ export function EventDetailContent({ eventId }: Props) {
               <span className="text-sm text-secondary">
                 {event.organizer_name}
               </span>
+              {(event as AtlasEventDetail & { organizer_verified?: boolean }).organizer_verified && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-accent" aria-label="Verified organizer">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+              )}
             </div>
           )}
 
-          {/* Source badge */}
           <div className="mt-4 flex items-center gap-2">
-            <Badge variant="platform">
-              via {event.source_platform}
-            </Badge>
+            <Badge variant="platform">via {event.source_platform}</Badge>
             {event.source?.url && (
-              <a
-                href={event.source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-accent hover:text-accent-hover"
-              >
+              <a href={event.source.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover">
                 View original listing
               </a>
             )}
           </div>
 
-          {/* Description */}
+          {/* M16: TODO -- add markdown rendering via react-markdown in a future pass */}
           {event.description && (
             <div className="mt-6">
               <h2 className="text-lg font-semibold text-primary">About</h2>
@@ -214,7 +197,6 @@ export function EventDetailContent({ eventId }: Props) {
             </div>
           )}
 
-          {/* Tags */}
           {event.tags && event.tags.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2">
               {event.tags.map((tag) => (
@@ -223,13 +205,11 @@ export function EventDetailContent({ eventId }: Props) {
             </div>
           )}
 
-          {/* Share */}
           <div className="mt-6">
             <ShareButton url={canonicalUrl} title={event.title} />
           </div>
         </div>
 
-        {/* Sidebar: tickets */}
         <div>
           <TicketSection
             eventId={eventId}

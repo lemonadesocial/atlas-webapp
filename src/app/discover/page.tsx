@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { STRINGS } from "@/lib/utils/constants";
+import { STRINGS, SITE_URL } from "@/lib/utils/constants";
 import { DiscoverContent } from "./DiscoverContent";
 import { EventGridSkeleton } from "@/components/discover/EventCardSkeleton";
 
 export const metadata: Metadata = {
   title: "Explore Events",
   description: "Search and discover events across all platforms on Atlas.",
+  alternates: { canonical: `${SITE_URL}/discover` },
   openGraph: {
     title: `Explore Events | ${STRINGS.siteName}`,
     description: "Search and discover events across all platforms on Atlas.",

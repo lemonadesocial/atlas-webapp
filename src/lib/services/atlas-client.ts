@@ -1,19 +1,11 @@
-import {
-  ATLAS_REGISTRY_URL,
-  LEMONADE_BACKEND_URL,
-} from "@/lib/utils/constants";
-import type {
-  AtlasSearchParams,
-  AtlasSearchResult,
-  AtlasEventDetail,
-  TicketType,
-} from "@/lib/types/atlas";
+import { getRegistryUrl } from "@/lib/utils/constants";
+import type { AtlasSearchParams, AtlasSearchResult } from "@/lib/types/atlas";
 
 async function registryFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
-  const res = await fetch(`${ATLAS_REGISTRY_URL}${path}`, {
+  const res = await fetch(`${getRegistryUrl()}${path}`, {
     ...init,
     headers: {
       "Atlas-Version": "1.0",
@@ -28,29 +20,6 @@ async function registryFetch<T>(
   return json["atlas:search_result"] ?? json;
 }
 
-async function backendFetch<T>(
-  path: string,
-  init?: RequestInit
-): Promise<T> {
-  const res = await fetch(`${LEMONADE_BACKEND_URL}${path}`, {
-    ...init,
-    headers: {
-      "Atlas-Agent-Id": "web:atlas-webapp",
-      "Atlas-Version": "1.0",
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-    signal: init?.signal ?? AbortSignal.timeout(10000),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(
-      `Backend API error: ${res.status} ${res.statusText} ${body}`
-    );
-  }
-  return res.json();
-}
-
 export async function searchEvents(
   params: AtlasSearchParams
 ): Promise<AtlasSearchResult> {
@@ -63,18 +32,6 @@ export async function searchEvents(
 
   return registryFetch<AtlasSearchResult>(
     `/atlas/v1/search?${searchParams.toString()}`
-  );
-}
-
-export async function getEvent(id: string): Promise<AtlasEventDetail> {
-  return backendFetch<AtlasEventDetail>(`/atlas/v1/events/${id}`);
-}
-
-export async function getEventTickets(
-  eventId: string
-): Promise<{ ticket_types: TicketType[] }> {
-  return backendFetch<{ ticket_types: TicketType[] }>(
-    `/atlas/v1/events/${eventId}/tickets`
   );
 }
 

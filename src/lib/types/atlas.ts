@@ -108,3 +108,80 @@ export interface Receipt {
     }>;
   };
 }
+
+// Phase 2: Auth types
+export interface AuthUser {
+  _id: string;
+  username: string;
+  display_name?: string;
+  image_avatar?: string;
+  stripe_connected_account?: {
+    account_id: string;
+    connected: boolean;
+  };
+}
+
+export interface Space {
+  _id: string;
+  title: string;
+  slug?: string;
+  description?: string;
+}
+
+export interface SpaceConnection {
+  id: string;
+  connectorType: string;
+  status: string;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+  enabled: boolean;
+  errorMessage?: string;
+}
+
+export interface ConnectPlatformResult {
+  connectionId: string;
+  requiresApiKey: boolean;
+  authUrl?: string;
+}
+
+export interface SubmitApiKeyResult {
+  id: string;
+  connectorType: string;
+  status: string;
+  enabled: boolean;
+}
+
+export interface StripeAccountLink {
+  url: string;
+  expires_at: string;
+}
+
+// Phase 2: Leaderboard types
+export interface LeaderboardEntry {
+  rank: number;
+  space_id: string;
+  space_name: string;
+  total_events: number;
+  total_attendees: number;
+  average_rating: number;
+  connected_platforms: string[];
+  verified: boolean;
+  trend_percent?: number;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  period: string;
+  category?: string;
+}
+
+// Onboarding state
+export interface OnboardingState {
+  currentStep: number;
+  spaceId?: string;
+  spaceName?: string;
+  stripeConnected?: boolean;
+  stripeSkipped?: boolean;
+  connectedPlatforms?: string[];
+  importedEventCount?: number;
+}

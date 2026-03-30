@@ -23,6 +23,18 @@ export const ATLAS_REGISTRY_URL =
 export const LEMONADE_BACKEND_URL =
   process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 
+// OAuth
+export const OAUTH_CLIENT_ID =
+  process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || "atlas-webapp";
+export const OAUTH_AUTHORITY =
+  process.env.NEXT_PUBLIC_OAUTH_AUTHORITY || "";
+export const OAUTH_CLIENT_SECRET =
+  process.env.OAUTH_CLIENT_SECRET || "";
+
+// Cookie names
+export const AUTH_COOKIE_NAME = "atlas_session";
+export const REFRESH_COOKIE_NAME = "atlas_refresh";
+
 export const NOMINATIM_URL =
   process.env.NEXT_PUBLIC_NOMINATIM_URL ||
   "https://nominatim.openstreetmap.org";
@@ -129,4 +141,68 @@ export const STRINGS = {
   shareWhatsApp: "WhatsApp",
   locationUnavailable: "Location not available. Enter a city manually.",
   locationDenied: "Location access denied. Enter a city manually.",
+
+  // Phase 2: Auth
+  signIn: "Sign In",
+  signOut: "Sign Out",
+  signingIn: "Signing you in...",
+  signInFailed: "Sign in failed. Please try again.",
+  signInDenied:
+    "You declined to sign in. You can try again anytime.",
+  signInUnavailable:
+    "Unable to connect to sign-in service. Please try again later.",
+  sessionExpired: "Your session expired. Please sign in again.",
+  myEvents: "My Events",
+  dashboard: "Dashboard",
+
+  // Phase 2: Onboarding
+  onboardTitle: "Get on Atlas",
+  onboardStep1Title: "Sign in",
+  onboardStep1Desc: "Sign in with your Lemonade account to get started.",
+  signInWithLemonade: "Sign in with Lemonade",
+  onboardStep2Title: "Select a Space",
+  onboardStep2Desc: "Choose an existing space or create a new one.",
+  createNewSpace: "Create New Space",
+  onboardStep3Title: "Connect Stripe",
+  onboardStep3Desc: "Connect Stripe to accept payments for your events.",
+  connectStripe: "Connect Stripe",
+  stripeConnected: "Stripe Connected",
+  skipForNow: "Skip for now",
+  verifyingStripe: "Verifying Stripe connection...",
+  stripeNotCompleted:
+    "Stripe setup not completed. You can try again or skip for now.",
+  onboardStep4Title: "Connect Platforms",
+  onboardStep4Desc:
+    "Import your events from other platforms, or create events on Lemonade.",
+  connectEventbrite: "Connect Eventbrite",
+  connectLuma: "Connect Lu.ma",
+  lumaApiKeyPlaceholder: "Enter your Lu.ma API key",
+  invalidApiKey: "Invalid API key. Please check and try again.",
+  importingEvents: (count: number) => `Importing ${count} events...`,
+  importPartialFail: (imported: number, total: number, failed: number) =>
+    `Imported ${imported} of ${total} events. ${failed} failed.`,
+  retryFailed: "Retry Failed",
+  createOnLemonade: "Create Event on Lemonade",
+  onboardDoneTitle: "You're on Atlas!",
+  onboardDoneSummary: (events: number, platforms: string[], space: string) =>
+    `${events} events imported from ${platforms.join(", ")} to ${space}.`,
+  viewYourEvents: "View Your Events on Atlas",
+  goToDashboard: "Go to Dashboard",
+
+  // Phase 2: Leaderboard
+  leaderboardTitle: "Leaderboard",
+  leaderboardDesc: "Top spaces and communities on Atlas",
+  allTime: "All Time",
+  thisMonth: "This Month",
+  thisWeek: "This Week",
+  trendingThisWeek: "Trending This Week",
+  rank: "Rank",
+  spaceName: "Space",
+  totalEvents: "Events",
+  totalAttendees: "Attendees",
+  avgRating: "Avg Rating",
+  connectedPlatforms: "Platforms",
+  verified: "Verified",
+  noLeaderboardData: "No leaderboard data available yet.",
+  leaderboardError: "Failed to load leaderboard. Please try again.",
 } as const;

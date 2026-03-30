@@ -10,13 +10,14 @@ function reject(reason: string, status: number = 400) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  if (!validatePathSegments(params.path)) {
+  const { path: segments } = await params;
+  if (!validatePathSegments(segments)) {
     return reject("Invalid path");
   }
 
-  const path = params.path.join("/");
+  const path = segments.join("/");
   const constructed = `/atlas/v1/${path}`;
 
   if (!constructed.startsWith("/atlas/v1/")) {
@@ -49,13 +50,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  if (!validatePathSegments(params.path)) {
+  const { path: segments } = await params;
+  if (!validatePathSegments(segments)) {
     return reject("Invalid path");
   }
 
-  const path = params.path.join("/");
+  const path = segments.join("/");
   const constructed = `/atlas/v1/${path}`;
 
   if (!constructed.startsWith("/atlas/v1/")) {

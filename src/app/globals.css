@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "General Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Clash Display", "General Sans", system-ui, sans-serif;
+
+  /* Dark mode colors (default) */
+  --color-background: #141317;
+  --color-page-overlay: rgba(20, 19, 23, 0.8);
+
+  --color-primary: #ffffff;
+  --color-primary-invert: #000000;
+  --color-secondary: rgba(255, 255, 255, 0.8);
+  --color-tertiary: rgba(255, 255, 255, 0.56);
+  --color-quaternary: rgba(255, 255, 255, 0.24);
+
+  --color-card: rgba(255, 255, 255, 0.04);
+  --color-card-border: rgba(255, 255, 255, 0.04);
+  --color-card-border-hover: rgba(255, 255, 255, 0.16);
+  --color-card-hover: rgba(255, 255, 255, 0.08);
+
+  --color-divider: rgba(255, 255, 255, 0.08);
+
+  --color-overlay-primary: #202022;
+  --color-overlay-secondary: rgba(32, 32, 34, 0.8);
+  --color-overlay-backdrop: rgba(0, 0, 0, 0.6);
+
+  --color-accent: #a78bfa;
+  --color-accent-hover: #c4b5fd;
+
+  --color-success: #22c55e;
+  --color-warning: #fbbf24;
+  --color-danger: #ef4444;
+
+  --color-btn-secondary: #ffffff;
+  --color-btn-secondary-content: #000000;
+  --color-btn-secondary-hover: rgba(255, 255, 255, 0.8);
+  --color-btn-tertiary: rgba(255, 255, 255, 0.08);
+  --color-btn-tertiary-content: rgba(255, 255, 255, 0.56);
+  --color-btn-tertiary-hover: rgba(255, 255, 255, 0.16);
+
+  --color-chip-bg: rgba(255, 255, 255, 0.08);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+
+  --color-background: #ffffff;
+  --color-page-overlay: rgba(255, 255, 255, 0.8);
+
+  --color-primary: #000000;
+  --color-primary-invert: #ffffff;
+  --color-secondary: rgba(0, 0, 0, 0.8);
+  --color-tertiary: rgba(0, 0, 0, 0.56);
+  --color-quaternary: rgba(0, 0, 0, 0.24);
+
+  --color-card: rgba(0, 0, 0, 0.02);
+  --color-card-border: rgba(0, 0, 0, 0.06);
+  --color-card-border-hover: rgba(0, 0, 0, 0.16);
+  --color-card-hover: rgba(0, 0, 0, 0.04);
+
+  --color-divider: rgba(0, 0, 0, 0.08);
+
+  --color-overlay-primary: #f5f5f5;
+  --color-overlay-secondary: rgba(245, 245, 245, 0.8);
+  --color-overlay-backdrop: rgba(0, 0, 0, 0.3);
+
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+
+  --color-btn-secondary: #000000;
+  --color-btn-secondary-content: #ffffff;
+  --color-btn-secondary-hover: rgba(0, 0, 0, 0.8);
+  --color-btn-tertiary: rgba(0, 0, 0, 0.06);
+  --color-btn-tertiary-content: rgba(0, 0, 0, 0.56);
+  --color-btn-tertiary-hover: rgba(0, 0, 0, 0.12);
+
+  --color-chip-bg: rgba(0, 0, 0, 0.06);
+}
+
+html {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-card) 25%,
+    var(--color-card-hover) 50%,
+    var(--color-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

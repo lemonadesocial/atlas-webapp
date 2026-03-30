@@ -1,0 +1,69 @@
+import type { Metadata } from "next";
+import { SITE_URL, STRINGS } from "@/lib/utils/constants";
+import { EventDetailContent } from "@/components/event/EventDetailContent";
+import { EventJsonLd } from "./EventJsonLd";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
+
+interface PageProps {
+  params: { id: string };
+}
+
+async function fetchEvent(id: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/atlas/v1/events/${id}`, {
+      headers: {
+        "Atlas-Agent-Id": "web:atlas-webapp",
+        "Atlas-Version": "1.0",
+      },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const event = await fetchEvent(params.id);
+  if (!event) return { title: "Event Not Found" };
+
+  const canonicalUrl = `${SITE_URL}/events/${params.id}`;
+
+  return {
+    title: event.title,
+    description:
+      event.description?.slice(0, 160) ||
+      `${event.title} on ${STRINGS.siteName}`,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      type: "article",
+      title: event.title,
+      description: event.description?.slice(0, 160) || event.title,
+      url: canonicalUrl,
+      images: event.image_url
+        ? [{ url: event.image_url, width: 1200, height: 630 }]
+        : [{ url: "/og-default.png", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: event.title,
+      description: event.description?.slice(0, 160) || event.title,
+      images: event.image_url ? [event.image_url] : ["/og-default.png"],
+    },
+  };
+}
+
+export default async function EventPage({ params }: PageProps) {
+  const event = await fetchEvent(params.id);
+
+  return (
+    <>
+      {event && <EventJsonLd event={event} eventId={params.id} />}
+      <EventDetailContent eventId={params.id} />
+    </>
+  );
+}

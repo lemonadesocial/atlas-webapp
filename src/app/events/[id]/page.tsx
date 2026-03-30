@@ -5,7 +5,7 @@ import { EventDetailContent } from "@/components/event/EventDetailContent";
 import { EventJsonLd } from "./EventJsonLd";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function fetchEvent(id: string) {
@@ -28,10 +28,11 @@ async function fetchEvent(id: string) {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const event = await fetchEvent(params.id);
+  const { id } = await params;
+  const event = await fetchEvent(id);
   if (!event) return { title: "Event Not Found" };
 
-  const canonicalUrl = `${SITE_URL}/events/${params.id}`;
+  const canonicalUrl = `${SITE_URL}/events/${id}`;
 
   return {
     title: event.title,
@@ -58,12 +59,13 @@ export async function generateMetadata({
 }
 
 export default async function EventPage({ params }: PageProps) {
-  const event = await fetchEvent(params.id);
+  const { id } = await params;
+  const event = await fetchEvent(id);
 
   return (
     <>
-      {event && <EventJsonLd event={event} eventId={params.id} />}
-      <EventDetailContent eventId={params.id} />
+      {event && <EventJsonLd event={event} eventId={id} />}
+      <EventDetailContent eventId={id} />
     </>
   );
 }

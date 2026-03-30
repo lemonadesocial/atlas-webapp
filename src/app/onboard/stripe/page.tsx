@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useOnboarding } from "@/lib/hooks/useOnboarding";
+import { useOnboarding, getStepRedirect } from "@/lib/hooks/useOnboarding";
 import { graphqlRequest } from "@/lib/services/graphql-client";
 import { STRINGS, SITE_URL } from "@/lib/utils/constants";
 import { OnboardLayout } from "@/components/onboard/OnboardLayout";
@@ -14,7 +14,7 @@ const STRIPE_LINK_MUTATION = `mutation($return_url: String!, $refresh_url: Strin
 }`;
 
 const STRIPE_STATUS_QUERY = `query {
-  getMe { stripe_connected_account { account_id connected } }
+  aiGetMe { stripe_connected_account { account_id connected } }
 }`;
 
 function StripeContent() {
@@ -34,24 +34,32 @@ function StripeContent() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/onboard");
+      return;
     }
-  }, [user, authLoading, router]);
+    // M4: Guard against skipping steps
+    const redirect = getStepRedirect(3, state);
+    if (redirect) {
+      router.replace(redirect);
+    }
+  }, [user, authLoading, router, state]);
 
   // Check initial Stripe status
   useEffect(() => {
     if (!user) return;
     setChecking(true);
     graphqlRequest<{
-      getMe: { stripe_connected_account?: { account_id: string; connected: boolean } };
+      aiGetMe: { stripe_connected_account?: { account_id: string; connected: boolean } };
     }>(STRIPE_STATUS_QUERY)
       .then((res) => {
-        const connected = res.data?.getMe?.stripe_connected_account?.connected ?? false;
+        const connected = res.data?.aiGetMe?.stripe_connected_account?.connected ?? false;
         setStripeConnected(connected);
         if (connected) {
           updateState({ stripeConnected: true });
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        setError("Failed to check Stripe status. Please try again.");
+      })
       .finally(() => setChecking(false));
   }, [user, updateState]);
 
@@ -71,9 +79,9 @@ function StripeContent() {
       }
       try {
         const res = await graphqlRequest<{
-          getMe: { stripe_connected_account?: { connected: boolean } };
+          aiGetMe: { stripe_connected_account?: { connected: boolean } };
         }>(STRIPE_STATUS_QUERY);
-        const connected = res.data?.getMe?.stripe_connected_account?.connected ?? false;
+        const connected = res.data?.aiGetMe?.stripe_connected_account?.connected ?? false;
         if (connected) {
           if (pollRef.current) clearInterval(pollRef.current);
           pollRef.current = null;

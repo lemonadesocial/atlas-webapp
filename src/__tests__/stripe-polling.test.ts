@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { pollUntil } from "@/lib/utils/poll";
 
-describe("Stripe status polling logic", () => {
+describe("pollUntil (Stripe status polling)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -10,56 +11,54 @@ describe("Stripe status polling logic", () => {
     vi.restoreAllMocks();
   });
 
-  it("polls at 3s intervals and resolves when connected", async () => {
+  it("resolves true when check succeeds on first attempt", async () => {
+    const check = vi.fn().mockResolvedValue(true);
+    const promise = pollUntil(check, 3000, 10);
+    const result = await promise;
+    expect(result).toBe(true);
+    expect(check).toHaveBeenCalledTimes(1);
+  });
+
+  it("polls at intervals and resolves when check succeeds", async () => {
     let callCount = 0;
-    const checkStripe = vi.fn().mockImplementation(() => {
+    const check = vi.fn().mockImplementation(() => {
       callCount++;
       return Promise.resolve(callCount >= 3);
     });
 
-    let resolved = false;
-    const poll = async () => {
-      for (let i = 0; i < 10; i++) {
-        const connected = await checkStripe();
-        if (connected) {
-          resolved = true;
-          return;
-        }
-        await new Promise((r) => setTimeout(r, 3000));
-      }
-    };
+    const promise = pollUntil(check, 3000, 10);
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(3000);
+    const result = await promise;
 
-    const promise = poll();
-    // Advance past first two checks (not connected) and third (connected)
-    await vi.advanceTimersByTimeAsync(0); // first check
-    await vi.advanceTimersByTimeAsync(3000); // second check
-    await vi.advanceTimersByTimeAsync(3000); // third check
-    await promise;
-
-    expect(resolved).toBe(true);
-    expect(checkStripe).toHaveBeenCalledTimes(3);
+    expect(result).toBe(true);
+    expect(check).toHaveBeenCalledTimes(3);
   });
 
-  it("gives up after 10 attempts (30 seconds)", async () => {
-    const checkStripe = vi.fn().mockResolvedValue(false);
+  it("returns false after max attempts", async () => {
+    const check = vi.fn().mockResolvedValue(false);
 
-    let timedOut = false;
-    const poll = async () => {
-      for (let i = 0; i < 10; i++) {
-        const connected = await checkStripe();
-        if (connected) return;
-        await new Promise((r) => setTimeout(r, 3000));
-      }
-      timedOut = true;
-    };
-
-    const promise = poll();
+    const promise = pollUntil(check, 3000, 10);
     for (let i = 0; i < 10; i++) {
       await vi.advanceTimersByTimeAsync(3000);
     }
-    await promise;
+    const result = await promise;
 
-    expect(timedOut).toBe(true);
-    expect(checkStripe).toHaveBeenCalledTimes(10);
+    expect(result).toBe(false);
+    expect(check).toHaveBeenCalledTimes(10);
+  });
+
+  it("handles check function errors gracefully", async () => {
+    let callCount = 0;
+    const check = vi.fn().mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.reject(new Error("network"));
+      return Promise.resolve(true);
+    });
+
+    // pollUntil does not catch errors - they propagate
+    const promise = pollUntil(check, 3000, 10);
+    await expect(promise).rejects.toThrow("network");
   });
 });

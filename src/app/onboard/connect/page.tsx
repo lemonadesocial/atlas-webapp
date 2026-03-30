@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useOnboarding } from "@/lib/hooks/useOnboarding";
+import { useOnboarding, getStepRedirect } from "@/lib/hooks/useOnboarding";
 import { graphqlRequest } from "@/lib/services/graphql-client";
-import { STRINGS } from "@/lib/utils/constants";
+import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
 import { OnboardLayout } from "@/components/onboard/OnboardLayout";
 import type { SpaceConnection, ConnectPlatformResult } from "@/lib/types/atlas";
 
@@ -55,9 +55,16 @@ export default function OnboardStep4() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/onboard");
+      return;
     }
-  }, [user, authLoading, router]);
+    // M4: Guard against skipping steps
+    const redirect = getStepRedirect(4, state);
+    if (redirect) {
+      router.replace(redirect);
+    }
+  }, [user, authLoading, router, state]);
 
+  // TODO (L3): Show import progress per US-4.23/US-4.24 once backend returns sync event counts
   // Fetch existing connections
   const fetchConnections = useCallback(async () => {
     if (!state.spaceId) return;
@@ -226,7 +233,7 @@ export default function OnboardStep4() {
               </div>
               {eventbrite.connected ? (
                 <span className="flex items-center gap-1 text-sm text-success">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Connected">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Connected
@@ -260,7 +267,7 @@ export default function OnboardStep4() {
               </div>
               {luma.connected ? (
                 <span className="flex items-center gap-1 text-sm text-success">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Connected">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Connected
@@ -278,7 +285,8 @@ export default function OnboardStep4() {
             {luma.showApiKey && !luma.connected && (
               <div className="mt-3 flex flex-col gap-2">
                 <input
-                  type="text"
+                  type="password"
+                  autoComplete="off"
                   value={luma.apiKey}
                   onChange={(e) =>
                     setLuma((prev) => ({ ...prev, apiKey: e.target.value }))
@@ -309,7 +317,7 @@ export default function OnboardStep4() {
           {/* Alternative CTA */}
           <div className="border-t border-divider pt-4">
             <a
-              href="https://app.lemonade.social/create-event"
+              href={`${LEMONADE_APP_URL}/create-event`}
               target="_blank"
               rel="noopener noreferrer"
               className="block text-center text-sm text-accent transition-colors hover:text-accent-hover"

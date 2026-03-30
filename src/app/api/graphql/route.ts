@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/server/auth";
-import { LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
+import { LEMONADE_BACKEND_URL } from "@/lib/server/config";
 
+// TODO: Add rate limiting (M3)
+// TODO: Add query allowlisting - backend enforces authorization for now (M2)
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
 
 export async function POST(request: NextRequest) {

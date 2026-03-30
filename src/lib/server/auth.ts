@@ -1,12 +1,17 @@
+import "server-only";
+
 import { cookies } from "next/headers";
+import crypto from "crypto";
 import {
-  AUTH_COOKIE_NAME,
-  REFRESH_COOKIE_NAME,
   OAUTH_AUTHORITY,
   OAUTH_CLIENT_ID,
   OAUTH_CLIENT_SECRET,
-  LEMONADE_BACKEND_URL,
-} from "@/lib/utils/constants";
+} from "@/lib/server/config";
+
+export const AUTH_COOKIE_NAME = "atlas_session";
+export const REFRESH_COOKIE_NAME = "atlas_refresh";
+export const OAUTH_STATE_COOKIE = "atlas_oauth_state";
+export const PKCE_COOKIE = "atlas_pkce";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -15,27 +20,39 @@ const COOKIE_OPTIONS = {
   path: "/",
 };
 
-export async function setAuthCookies(
-  accessToken: string,
-  refreshToken: string,
-  expiresIn: number
-) {
-  const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, accessToken, {
-    ...COOKIE_OPTIONS,
-    maxAge: expiresIn,
-  });
-  cookieStore.set(REFRESH_COOKIE_NAME, refreshToken, {
-    ...COOKIE_OPTIONS,
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-  });
+// --- PKCE helpers (C1) ---
+
+function base64urlEncode(buffer: Buffer): string {
+  return buffer.toString("base64url");
 }
 
-export async function clearAuthCookies() {
-  const cookieStore = await cookies();
-  cookieStore.delete(AUTH_COOKIE_NAME);
-  cookieStore.delete(REFRESH_COOKIE_NAME);
+export function generateCodeVerifier(): string {
+  return base64urlEncode(crypto.randomBytes(32));
 }
+
+export function generateCodeChallenge(verifier: string): string {
+  const hash = crypto.createHash("sha256").update(verifier).digest();
+  return base64urlEncode(hash);
+}
+
+// --- CSRF state (H1) ---
+
+export function generateStateToken(): string {
+  return base64urlEncode(crypto.randomBytes(32));
+}
+
+/**
+ * Validates that a return path is safe (no open redirect).
+ * Must start with "/" and must not contain "://" or "//".
+ */
+export function isValidReturnPath(path: string): boolean {
+  if (!path.startsWith("/")) return false;
+  if (path.includes("://")) return false;
+  if (path.startsWith("//")) return false;
+  return true;
+}
+
+// --- Cookie management ---
 
 export async function getAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -47,7 +64,19 @@ export async function getRefreshToken(): Promise<string | null> {
   return cookieStore.get(REFRESH_COOKIE_NAME)?.value ?? null;
 }
 
-export async function exchangeCodeForTokens(code: string, redirectUri: string) {
+export async function clearAuthCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_COOKIE_NAME);
+  cookieStore.delete(REFRESH_COOKIE_NAME);
+}
+
+// --- Token exchange ---
+
+export async function exchangeCodeForTokens(
+  code: string,
+  redirectUri: string,
+  codeVerifier: string
+) {
   const tokenUrl = `${OAUTH_AUTHORITY}/oauth2/token`;
 
   const body = new URLSearchParams({
@@ -56,6 +85,7 @@ export async function exchangeCodeForTokens(code: string, redirectUri: string) {
     redirect_uri: redirectUri,
     client_id: OAUTH_CLIENT_ID,
     client_secret: OAUTH_CLIENT_SECRET,
+    code_verifier: codeVerifier,
   });
 
   const res = await fetch(tokenUrl, {
@@ -104,41 +134,4 @@ export async function refreshAccessToken(refreshToken: string) {
     refresh_token: string;
     expires_in: number;
   }>;
-}
-
-export async function proxyGraphQL(
-  query: string,
-  variables?: Record<string, unknown>
-) {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-
-  const res = await fetch(`${LEMONADE_BACKEND_URL}/graphql`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(10000),
-  });
-
-  if (!res.ok) {
-    throw new Error(`GraphQL proxy error: ${res.status}`);
-  }
-
-  return res.json();
-}
-
-export function buildAuthorizeUrl(redirectUri: string, state: string): string {
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: OAUTH_CLIENT_ID,
-    redirect_uri: redirectUri,
-    scope: "openid offline_access",
-    state,
-  });
-  return `${OAUTH_AUTHORITY}/oauth2/auth?${params.toString()}`;
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "@/lib/hooks/useTheme";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { STRINGS } from "@/lib/utils/constants";
+import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
 
 function MobileSignOut({ onClose }: { onClose: () => void }) {
   const { signOut } = useAuth();
@@ -74,7 +74,7 @@ function UserDropdown() {
           role="menu"
         >
           <Link
-            href="/discover?my_events=true"
+            href={`${LEMONADE_APP_URL}/dashboard`}
             className="block w-full px-4 py-2 text-left text-sm text-secondary hover:bg-btn-tertiary hover:text-primary"
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -82,7 +82,7 @@ function UserDropdown() {
             {STRINGS.myEvents}
           </Link>
           <a
-            href="https://app.lemonade.social/dashboard"
+            href={`${LEMONADE_APP_URL}/dashboard`}
             className="block w-full px-4 py-2 text-left text-sm text-secondary hover:bg-btn-tertiary hover:text-primary"
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -212,7 +212,7 @@ export function Navbar() {
                 <UserDropdown />
               ) : (
                 <button
-                  onClick={() => signIn("/onboard")}
+                  onClick={() => signIn()}
                   className="hidden rounded-md bg-btn-secondary px-4 py-2 text-sm font-medium text-btn-secondary-content transition-colors hover:bg-btn-secondary-hover md:inline-flex"
                 >
                   {STRINGS.signIn}
@@ -283,7 +283,7 @@ export function Navbar() {
               <button
                 onClick={() => {
                   setMobileOpen(false);
-                  signIn("/onboard");
+                  signIn();
                 }}
                 className="rounded-md px-3 py-2 text-left text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
               >
@@ -293,7 +293,7 @@ export function Navbar() {
             {!loading && user && (
               <>
                 <Link
-                  href="/discover?my_events=true"
+                  href={`${LEMONADE_APP_URL}/dashboard`}
                   className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
                   onClick={() => setMobileOpen(false)}
                 >

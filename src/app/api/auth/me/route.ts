@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/server/auth";
-import { LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
+import { LEMONADE_BACKEND_URL } from "@/lib/server/config";
 
+// H3: Use aiGetMe per PRD section 4.3
 const ME_QUERY = `query {
-  getMe {
+  aiGetMe {
     _id
     username
     display_name
@@ -40,7 +41,7 @@ export async function GET() {
     }
 
     const json = await res.json();
-    const user = json?.data?.getMe ?? null;
+    const user = json?.data?.aiGetMe ?? null;
     return NextResponse.json({ user });
   } catch {
     return NextResponse.json({ user: null }, { status: 200 });

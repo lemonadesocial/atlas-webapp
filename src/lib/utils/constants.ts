@@ -23,17 +23,12 @@ export const ATLAS_REGISTRY_URL =
 export const LEMONADE_BACKEND_URL =
   process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 
-// OAuth
-export const OAUTH_CLIENT_ID =
-  process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || "atlas-webapp";
-export const OAUTH_AUTHORITY =
-  process.env.NEXT_PUBLIC_OAUTH_AUTHORITY || "";
-export const OAUTH_CLIENT_SECRET =
-  process.env.OAUTH_CLIENT_SECRET || "";
+// OAuth client ID and authority are server-only in src/lib/server/config.ts.
+// NEXT_PUBLIC_OAUTH_CLIENT_ID is only used by the server-side /api/auth/start route.
 
-// Cookie names
-export const AUTH_COOKIE_NAME = "atlas_session";
-export const REFRESH_COOKIE_NAME = "atlas_refresh";
+// Lemonade main app URL (for dashboard/create-event links)
+export const LEMONADE_APP_URL =
+  process.env.NEXT_PUBLIC_LEMONADE_APP_URL || "https://app.lemonade.social";
 
 export const NOMINATIM_URL =
   process.env.NEXT_PUBLIC_NOMINATIM_URL ||
@@ -179,8 +174,6 @@ export const STRINGS = {
   lumaApiKeyPlaceholder: "Enter your Lu.ma API key",
   invalidApiKey: "Invalid API key. Please check and try again.",
   importingEvents: (count: number) => `Importing ${count} events...`,
-  importPartialFail: (imported: number, total: number, failed: number) =>
-    `Imported ${imported} of ${total} events. ${failed} failed.`,
   retryFailed: "Retry Failed",
   createOnLemonade: "Create Event on Lemonade",
   onboardDoneTitle: "You're on Atlas!",

@@ -144,18 +144,6 @@ export interface ConnectPlatformResult {
   authUrl?: string;
 }
 
-export interface SubmitApiKeyResult {
-  id: string;
-  connectorType: string;
-  status: string;
-  enabled: boolean;
-}
-
-export interface StripeAccountLink {
-  url: string;
-  expires_at: string;
-}
-
 // Phase 2: Leaderboard types
 export interface LeaderboardEntry {
   rank: number;

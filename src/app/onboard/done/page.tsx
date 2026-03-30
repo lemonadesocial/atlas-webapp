@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useOnboarding } from "@/lib/hooks/useOnboarding";
-import { STRINGS } from "@/lib/utils/constants";
+import { useOnboarding, getStepRedirect } from "@/lib/hooks/useOnboarding";
+import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
 
 export default function OnboardDone() {
   const { user, loading: authLoading } = useAuth();
@@ -15,8 +15,14 @@ export default function OnboardDone() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/onboard");
+      return;
     }
-  }, [user, authLoading, router]);
+    // M4: Guard against skipping steps
+    const redirect = getStepRedirect(5, state);
+    if (redirect) {
+      router.replace(redirect);
+    }
+  }, [user, authLoading, router, state]);
 
   if (authLoading || !user) {
     return (
@@ -32,8 +38,9 @@ export default function OnboardDone() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <div className="flex flex-col items-center gap-6 rounded-lg border border-divider bg-card p-8 text-center">
+        {/* TODO: Add CSS confetti animation (M13 - US-4.30) */}
         {/* Celebration icon */}
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10" aria-hidden="true">
           <svg
             width="40"
             height="40"
@@ -90,7 +97,7 @@ export default function OnboardDone() {
             {STRINGS.viewYourEvents}
           </Link>
           <a
-            href="https://app.lemonade.social/dashboard"
+            href={`${LEMONADE_APP_URL}/dashboard`}
             className="rounded-md border border-divider px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-btn-tertiary"
           >
             {STRINGS.goToDashboard}

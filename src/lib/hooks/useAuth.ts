@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import type { AuthUser } from "@/lib/types/atlas";
 
 interface AuthState {
@@ -25,18 +25,33 @@ export function useAuth() {
 
 export { AuthContext };
 
+// L10: Simple cache to avoid fetching /api/auth/me on every navigation
+const ME_CACHE_TTL = 60_000; // 1 minute
+let meCache: { user: AuthUser | null; ts: number } | null = null;
+
 export function useAuthProvider(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
-  const fetchMe = useCallback(async () => {
+  const fetchMe = useCallback(async (skipCache = false) => {
+    if (fetchingRef.current) return;
+    if (!skipCache && meCache && Date.now() - meCache.ts < ME_CACHE_TTL) {
+      setUser(meCache.user);
+      setLoading(false);
+      return;
+    }
+    fetchingRef.current = true;
     try {
       const res = await fetch("/api/auth/me");
       const data = await res.json();
-      setUser(data.user ?? null);
+      const fetched = data.user ?? null;
+      meCache = { user: fetched, ts: Date.now() };
+      setUser(fetched);
     } catch {
       setUser(null);
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
   }, []);
@@ -45,22 +60,14 @@ export function useAuthProvider(): AuthState {
     fetchMe();
   }, [fetchMe]);
 
+  // C1 + H1: Redirect to server-side /api/auth/start which generates PKCE + CSRF
   const signIn = useCallback((returnTo?: string) => {
-    const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || "atlas-webapp";
-    const authority = process.env.NEXT_PUBLIC_OAUTH_AUTHORITY || "";
-    const redirectUri = `${window.location.origin}/api/auth/callback`;
-    const state = returnTo || window.location.pathname;
-    const params = new URLSearchParams({
-      response_type: "code",
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      scope: "openid offline_access",
-      state,
-    });
-    window.location.href = `${authority}/oauth2/auth?${params.toString()}`;
+    const path = returnTo || window.location.pathname;
+    window.location.href = `/api/auth/start?return_to=${encodeURIComponent(path)}`;
   }, []);
 
   const signOut = useCallback(async () => {
+    meCache = null;
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     window.location.href = "/";
@@ -70,11 +77,13 @@ export function useAuthProvider(): AuthState {
     try {
       const res = await fetch("/api/auth/refresh", { method: "POST" });
       if (res.ok) {
-        await fetchMe();
+        await fetchMe(true);
       } else {
+        meCache = null;
         setUser(null);
       }
     } catch {
+      meCache = null;
       setUser(null);
     }
   }, [fetchMe]);

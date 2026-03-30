@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { STRINGS, CATEGORIES } from "@/lib/utils/constants";
@@ -21,6 +21,10 @@ async function fetchLeaderboard(
   if (category) params.set("category", category);
   const url = `/api/atlas/leaderboard${params.toString() ? `?${params.toString()}` : ""}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  // M12: Backend endpoint may not exist yet - return empty on 404
+  if (res.status === 404) {
+    return { entries: [], period: period || "", category: category || undefined };
+  }
   if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
   return res.json();
 }
@@ -37,7 +41,7 @@ function TrendArrow({ percent }: { percent: number }) {
   const isUp = percent > 0;
   return (
     <span className={`flex items-center gap-0.5 text-xs ${isUp ? "text-success" : "text-danger"}`}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isUp ? "" : "rotate-180"}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isUp ? "" : "rotate-180"} aria-hidden="true">
         <polyline points="18 15 12 9 6 15" />
       </svg>
       {Math.abs(percent)}%
@@ -100,14 +104,14 @@ function LeaderboardInner() {
     }
   };
 
-  const sortedEntries = [...entries].sort((a, b) => {
+  const sortedEntries = useMemo(() => [...entries].sort((a, b) => {
     const aVal = a[sortKey] ?? 0;
     const bVal = b[sortKey] ?? 0;
     if (typeof aVal === "number" && typeof bVal === "number") {
       return sortDir === "desc" ? bVal - aVal : aVal - bVal;
     }
     return 0;
-  });
+  }), [entries, sortKey, sortDir]);
 
   const SortHeader = ({
     label,
@@ -225,6 +229,7 @@ function LeaderboardInner() {
             </div>
           )}
 
+          {/* TODO (L9): /discover?space=[id] links depend on discover page supporting `space` filter param */}
           {/* Desktop table */}
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left">
@@ -268,7 +273,7 @@ function LeaderboardInner() {
                       >
                         {entry.space_name}
                         {entry.verified && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-accent" aria-label="Verified">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-accent" role="img" aria-label="Verified">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         )}
@@ -318,7 +323,7 @@ function LeaderboardInner() {
                       <p className="flex items-center gap-1 text-sm font-medium text-primary">
                         {entry.space_name}
                         {entry.verified && (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-accent" aria-label="Verified">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-accent" role="img" aria-label="Verified">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         )}

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
 import { STRINGS, SITE_URL } from "@/lib/utils/constants";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -67,7 +66,6 @@ export default function RootLayout({
           <Footer />
           <CookieConsent />
         </ErrorBoundaryWrapper>
-        <Analytics />
       </body>
     </html>
   );

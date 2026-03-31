@@ -158,6 +158,12 @@ export function Navbar() {
           >
             Docs
           </Link>
+          <Link
+            href="/chat"
+            className="text-sm text-secondary transition-colors hover:text-primary"
+          >
+            Chat
+          </Link>
         </div>
 
         {/* Right side */}
@@ -278,6 +284,13 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
             >
               Docs
+            </Link>
+            <Link
+              href="/chat"
+              className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+              onClick={() => setMobileOpen(false)}
+            >
+              Chat
             </Link>
             {!loading && !user && (
               <button

@@ -9,7 +9,7 @@ import { EventDetailSkeleton } from "./EventDetailSkeleton";
 import { TicketSection } from "./TicketSection";
 import { ShareButton } from "./ShareButton";
 import { formatDate } from "@/lib/utils/format";
-import { SITE_URL } from "@/lib/utils/constants";
+import { SITE_URL, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 import { validateEventId } from "@/lib/utils/escape";
 import type { AtlasEventDetail, TicketType } from "@/lib/types/atlas";
 
@@ -35,12 +35,22 @@ export function EventDetailContent({ eventId }: Props) {
 
     const attempt = async (): Promise<boolean> => {
       try {
+        const headers = {
+          "Atlas-Agent-Id": "web:atlas-webapp",
+          "Atlas-Version": "1.0",
+        };
         const [eventRes, ticketsRes] = await Promise.allSettled([
-          fetch(`/api/atlas/events/${eventId}`).then((r) => {
+          fetch(`${LEMONADE_BACKEND_URL}/atlas/v1/events/${eventId}`, {
+            headers,
+            credentials: "include",
+          }).then((r) => {
             if (!r.ok) throw new Error(`${r.status}`);
             return r.json();
           }),
-          fetch(`/api/atlas/events/${eventId}/tickets`).then((r) => {
+          fetch(`${LEMONADE_BACKEND_URL}/atlas/v1/events/${eventId}/tickets`, {
+            headers,
+            credentials: "include",
+          }).then((r) => {
             if (!r.ok) return { ticket_types: [] };
             return r.json();
           }),

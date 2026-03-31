@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import type { AuthUser } from "@/lib/types/atlas";
+import { LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 
 interface AuthState {
   user: AuthUser | null;
@@ -25,9 +26,11 @@ export function useAuth() {
 
 export { AuthContext };
 
-// L10: Simple cache to avoid fetching /api/auth/me on every navigation
+// L10: Simple cache to avoid fetching me on every navigation
 const ME_CACHE_TTL = 60_000; // 1 minute
 let meCache: { user: AuthUser | null; ts: number } | null = null;
+
+const ME_QUERY = `query { aiGetMe { _id username display_name image_avatar stripe_connected_account { account_id connected } } }`;
 
 export function useAuthProvider(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -43,9 +46,19 @@ export function useAuthProvider(): AuthState {
     }
     fetchingRef.current = true;
     try {
-      const res = await fetch("/api/auth/me");
-      const data = await res.json();
-      const fetched = data.user ?? null;
+      const res = await fetch(`${LEMONADE_BACKEND_URL}/graphql`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ query: ME_QUERY }),
+      });
+      if (!res.ok) {
+        setUser(null);
+        meCache = { user: null, ts: Date.now() };
+        return;
+      }
+      const json = await res.json();
+      const fetched = json?.data?.aiGetMe ?? null;
       meCache = { user: fetched, ts: Date.now() };
       setUser(fetched);
     } catch {

@@ -1,9 +1,9 @@
-FROM node:20-slim AS base
+FROM node:20-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
@@ -15,15 +15,15 @@ ARG NEXT_PUBLIC_LEMONADE_BACKEND_URL
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_NOMINATIM_URL
 
-RUN npm run build
+RUN yarn build
 
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 --gid nodejs nextjs
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

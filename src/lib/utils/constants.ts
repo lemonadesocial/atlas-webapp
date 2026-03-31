@@ -26,6 +26,10 @@ export const LEMONADE_BACKEND_URL =
 export const LEMONADE_AI_URL =
   process.env.NEXT_PUBLIC_LEMONADE_AI_URL || "";
 
+// Identity service URL (login/registration)
+export const IDENTITY_URL =
+  process.env.NEXT_PUBLIC_IDENTITY_URL || "";
+
 // Lemonade main app URL (for dashboard/create-event links)
 export const LEMONADE_APP_URL =
   process.env.NEXT_PUBLIC_LEMONADE_APP_URL || "https://app.lemonade.social";

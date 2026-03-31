@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import type { AuthUser } from "@/lib/types/atlas";
-import { LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
+import { LEMONADE_BACKEND_URL, IDENTITY_URL } from "@/lib/utils/constants";
 
 interface AuthState {
   user: AuthUser | null;
@@ -73,10 +73,11 @@ export function useAuthProvider(): AuthState {
     fetchMe();
   }, [fetchMe]);
 
-  // C1 + H1: Redirect to server-side /api/auth/start which generates PKCE + CSRF
   const signIn = useCallback((returnTo?: string) => {
-    const path = returnTo || window.location.pathname;
-    window.location.href = `/api/auth/start?return_to=${encodeURIComponent(path)}`;
+    const returnUrl = returnTo
+      ? `${window.location.origin}${returnTo}`
+      : window.location.href;
+    window.location.href = `${IDENTITY_URL}/login?return_to=${encodeURIComponent(returnUrl)}`;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -87,18 +88,7 @@ export function useAuthProvider(): AuthState {
   }, []);
 
   const refresh = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/refresh", { method: "POST" });
-      if (res.ok) {
-        await fetchMe(true);
-      } else {
-        meCache = null;
-        setUser(null);
-      }
-    } catch {
-      meCache = null;
-      setUser(null);
-    }
+    await fetchMe(true);
   }, [fetchMe]);
 
   return { user, loading, signIn, signOut, refresh };

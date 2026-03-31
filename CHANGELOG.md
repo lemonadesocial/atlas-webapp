@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.1...v1.0.2) (2026-03-31)
+
+
+### Bug Fixes
+
+* bust Docker cache for updated build args ([214a14c](https://github.com/lemonadesocial/atlas-webapp/commit/214a14c41bcd8e870ef92a0feb6e8cedd80beba1))
+* remove Docker registry cache to force full rebuild ([ac2907b](https://github.com/lemonadesocial/atlas-webapp/commit/ac2907bb4a56f06245441b4996689f67863f7951))
+
 ## [1.0.1](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.0...v1.0.1) (2026-03-31)
 
 

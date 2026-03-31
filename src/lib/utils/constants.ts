@@ -198,4 +198,12 @@ export const STRINGS = {
   verified: "Verified",
   noLeaderboardData: "No leaderboard data available yet.",
   leaderboardError: "Failed to load leaderboard. Please try again.",
+
+  // Phase 3: Chat
+  chatTitle: "Atlas Chat",
+  chatDescription: "Search events, get recommendations, or manage your events with natural language.",
+  chatPlaceholder: "Ask about events...",
+  chatSignInPrompt: "Sign in to manage events, view ticket sales, and more.",
+  chatClear: "Clear chat",
+  chatError: "Failed to send message. Please try again.",
 } as const;

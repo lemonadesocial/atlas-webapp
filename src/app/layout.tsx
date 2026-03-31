@@ -6,6 +6,8 @@ import { CookieConsent } from "@/components/layout/CookieConsent";
 import { SkipToContent } from "@/components/layout/SkipToContent";
 import { ErrorBoundaryWrapper } from "@/components/layout/ErrorBoundaryWrapper";
 import { AuthProvider } from "@/components/layout/AuthProvider";
+import { ChatProvider } from "@/components/chat/ChatProvider";
+import { FloatingChatWidget } from "@/components/chat/FloatingChatWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -66,6 +68,9 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <ChatProvider>
+              <FloatingChatWidget />
+            </ChatProvider>
             <CookieConsent />
           </ErrorBoundaryWrapper>
         </AuthProvider>

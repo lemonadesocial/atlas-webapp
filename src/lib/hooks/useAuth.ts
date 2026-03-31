@@ -82,19 +82,13 @@ export function useAuthProvider(): AuthState {
   const signOut = useCallback(async () => {
     meCache = null;
     try {
-      // Call Kratos to create and execute browser logout flow
       const res = await fetch(`${KRATOS_PUBLIC_URL}/self-service/logout/browser`, {
         credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.logout_url) {
-          window.location.href = data.logout_url;
-          return;
-        }
         if (data.logout_token) {
           await fetch(`${KRATOS_PUBLIC_URL}/self-service/logout?token=${data.logout_token}`, {
-            method: "GET",
             credentials: "include",
           });
         }

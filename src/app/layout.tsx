@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { SkipToContent } from "@/components/layout/SkipToContent";
 import { ErrorBoundaryWrapper } from "@/components/layout/ErrorBoundaryWrapper";
+import { AuthProvider } from "@/components/layout/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -58,14 +59,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-primary">
         <SkipToContent />
-        <ErrorBoundaryWrapper>
-          <Navbar />
-          <main id="main-content" className="min-h-[calc(100vh-4rem)]">
-            {children}
-          </main>
-          <Footer />
-          <CookieConsent />
-        </ErrorBoundaryWrapper>
+        <AuthProvider>
+          <ErrorBoundaryWrapper>
+            <Navbar />
+            <main id="main-content" className="min-h-[calc(100vh-4rem)]">
+              {children}
+            </main>
+            <Footer />
+            <CookieConsent />
+          </ErrorBoundaryWrapper>
+        </AuthProvider>
       </body>
     </html>
   );

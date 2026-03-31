@@ -1,4 +1,17 @@
 import "@testing-library/jest-dom/vitest";
+import { vi } from "vitest";
+
+// Mock server-only module so server utilities can be tested in jsdom
+vi.mock("server-only", () => ({}));
+
+// Mock next/headers for server auth module imports
+vi.mock("next/headers", () => ({
+  cookies: () => ({
+    get: () => undefined,
+    set: () => {},
+    delete: () => {},
+  }),
+}));
 
 // Mock localStorage
 const localStorageMock = (() => {

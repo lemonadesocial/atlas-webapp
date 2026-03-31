@@ -1,12 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "@/lib/hooks/useTheme";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
+
+function MobileSignOut({ onClose }: { onClose: () => void }) {
+  const { signOut } = useAuth();
+  return (
+    <button
+      onClick={() => {
+        onClose();
+        signOut();
+      }}
+      className="rounded-md px-3 py-2 text-left text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+    >
+      {STRINGS.signOut}
+    </button>
+  );
+}
+
+function UserDropdown() {
+  const { user, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (!user) return null;
+
+  const displayName = user.display_name || user.username || "User";
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+        aria-label="User menu"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        {user.image_avatar ? (
+          <Image
+            src={user.image_avatar}
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-full object-cover"
+            unoptimized
+          />
+        ) : (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+            {initial}
+          </span>
+        )}
+        <span className="hidden md:inline">{displayName}</span>
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-1 w-48 rounded-md border border-divider bg-background shadow-lg"
+          role="menu"
+        >
+          <Link
+            href={`${LEMONADE_APP_URL}/dashboard`}
+            className="block w-full px-4 py-2 text-left text-sm text-secondary hover:bg-btn-tertiary hover:text-primary"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+          >
+            {STRINGS.myEvents}
+          </Link>
+          <a
+            href={`${LEMONADE_APP_URL}/dashboard`}
+            className="block w-full px-4 py-2 text-left text-sm text-secondary hover:bg-btn-tertiary hover:text-primary"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+          >
+            {STRINGS.dashboard}
+          </a>
+          <button
+            onClick={() => {
+              setOpen(false);
+              signOut();
+            }}
+            className="block w-full px-4 py-2 text-left text-sm text-secondary hover:bg-btn-tertiary hover:text-primary"
+            role="menuitem"
+          >
+            {STRINGS.signOut}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, loading, signIn } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 border-b border-divider bg-background/80 backdrop-blur-lg">
@@ -44,12 +146,12 @@ export function Navbar() {
           >
             Explore
           </Link>
-          <span
-            className="text-sm text-quaternary cursor-default"
-            title="Coming soon"
+          <Link
+            href="/leaderboard"
+            className="text-sm text-secondary transition-colors hover:text-primary"
           >
             Leaderboard
-          </span>
+          </Link>
           <Link
             href="/docs"
             className="text-sm text-secondary transition-colors hover:text-primary"
@@ -103,13 +205,21 @@ export function Navbar() {
             )}
           </button>
 
-          {/* Sign In (placeholder for Phase 2 auth) */}
-          <Link
-            href="/onboard"
-            className="hidden rounded-md bg-btn-secondary px-4 py-2 text-sm font-medium text-btn-secondary-content transition-colors hover:bg-btn-secondary-hover md:inline-flex"
-          >
-            Sign In
-          </Link>
+          {/* Auth: user dropdown or sign in button */}
+          {!loading && (
+            <>
+              {user ? (
+                <UserDropdown />
+              ) : (
+                <button
+                  onClick={() => signIn()}
+                  className="hidden rounded-md bg-btn-secondary px-4 py-2 text-sm font-medium text-btn-secondary-content transition-colors hover:bg-btn-secondary-hover md:inline-flex"
+                >
+                  {STRINGS.signIn}
+                </button>
+              )}
+            </>
+          )}
 
           {/* Mobile hamburger */}
           <button
@@ -155,9 +265,13 @@ export function Navbar() {
             >
               Explore
             </Link>
-            <span className="rounded-md px-3 py-2 text-sm text-quaternary">
-              Leaderboard (coming soon)
-            </span>
+            <Link
+              href="/leaderboard"
+              className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+              onClick={() => setMobileOpen(false)}
+            >
+              Leaderboard
+            </Link>
             <Link
               href="/docs"
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
@@ -165,13 +279,29 @@ export function Navbar() {
             >
               Docs
             </Link>
-            <Link
-              href="/onboard"
-              className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
-              onClick={() => setMobileOpen(false)}
-            >
-              Sign In
-            </Link>
+            {!loading && !user && (
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  signIn();
+                }}
+                className="rounded-md px-3 py-2 text-left text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+              >
+                {STRINGS.signIn}
+              </button>
+            )}
+            {!loading && user && (
+              <>
+                <Link
+                  href={`${LEMONADE_APP_URL}/dashboard`}
+                  className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {STRINGS.myEvents}
+                </Link>
+                <MobileSignOut onClose={() => setMobileOpen(false)} />
+              </>
+            )}
           </div>
         </div>
       )}

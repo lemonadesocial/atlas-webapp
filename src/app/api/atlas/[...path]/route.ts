@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validatePathSegments } from "@/lib/utils/escape";
+import { getAccessToken } from "@/lib/server/auth";
 
 const BACKEND_URL = process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
@@ -28,11 +29,17 @@ export async function GET(
 
   // TODO: Add rate limiting middleware or WAF for production (M3)
   try {
+    const token = await getAccessToken();
+    const headers: Record<string, string> = {
+      "Atlas-Agent-Id": "web:atlas-webapp",
+      "Atlas-Version": "1.0",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
-      headers: {
-        "Atlas-Agent-Id": "web:atlas-webapp",
-        "Atlas-Version": "1.0",
-      },
+      headers,
       signal: AbortSignal.timeout(10000),
     });
 
@@ -77,13 +84,19 @@ export async function POST(
       return reject("Request body too large", 413);
     }
 
+    const token = await getAccessToken();
+    const postHeaders: Record<string, string> = {
+      "Atlas-Agent-Id": "web:atlas-webapp",
+      "Atlas-Version": "1.0",
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      postHeaders["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
       method: "POST",
-      headers: {
-        "Atlas-Agent-Id": "web:atlas-webapp",
-        "Atlas-Version": "1.0",
-        "Content-Type": "application/json",
-      },
+      headers: postHeaders,
       body,
       signal: AbortSignal.timeout(10000),
     });

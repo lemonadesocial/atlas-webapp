@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { STRINGS } from "@/lib/utils/constants";
 
 export function Footer() {
   return (
@@ -6,14 +7,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div>
-            <h3 className="text-sm font-semibold text-primary">Atlas</h3>
+            <h3 className="text-sm font-semibold text-primary">{STRINGS.siteName}</h3>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
                   href="/discover"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  Explore Events
+                  {STRINGS.exploreEvents}
                 </Link>
               </li>
               <li>
@@ -21,20 +22,20 @@ export function Footer() {
                   href="/onboard"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  List Your Events
+                  {STRINGS.listYourEvents}
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-primary">Protocol</h3>
+            <h3 className="text-sm font-semibold text-primary">{STRINGS.footerProtocol}</h3>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
                   href="/docs"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  Documentation
+                  {STRINGS.footerDocumentation}
                 </Link>
               </li>
               <li>
@@ -44,7 +45,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  GitHub
+                  {STRINGS.footerGitHub}
                 </a>
               </li>
             </ul>
@@ -59,20 +60,20 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  Main Site
+                  {STRINGS.footerMainSite}
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-primary">Legal</h3>
+            <h3 className="text-sm font-semibold text-primary">{STRINGS.footerLegal}</h3>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
                   href="/terms"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  Terms of Service
+                  {STRINGS.footerTerms}
                 </Link>
               </li>
               <li>
@@ -80,7 +81,7 @@ export function Footer() {
                   href="/privacy"
                   className="text-sm text-tertiary hover:text-secondary transition-colors"
                 >
-                  Privacy Policy
+                  {STRINGS.privacyPolicy}
                 </Link>
               </li>
             </ul>
@@ -88,7 +89,7 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t border-divider pt-8 text-center">
           <p className="text-sm text-quaternary">
-            Atlas Protocol by Lemonade
+            {STRINGS.footerTagline}
           </p>
         </div>
       </div>

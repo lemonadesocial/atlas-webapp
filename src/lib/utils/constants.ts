@@ -206,4 +206,110 @@ export const STRINGS = {
   chatSignInPrompt: "Sign in to manage events, view ticket sales, and more.",
   chatClear: "Clear chat",
   chatError: "Failed to send message. Please try again.",
+
+  // Navigation
+  navExplore: "Explore",
+  navLeaderboard: "Leaderboard",
+  navDocs: "Docs",
+  navChat: "Chat",
+
+  // Common
+  search: "Search",
+  goHome: "Go Home",
+  searchEvents: "Search Events",
+  share: "Share",
+  copied: "Copied!",
+  loading: "Loading...",
+  about: "About",
+  backToExplore: "Back to Explore",
+  viewOriginalListing: "View original listing",
+
+  // Footer
+  footerProtocol: "Protocol",
+  footerDocumentation: "Documentation",
+  footerGitHub: "GitHub",
+  footerMainSite: "Main Site",
+  footerLegal: "Legal",
+  footerTerms: "Terms of Service",
+  footerTagline: "Atlas Protocol by Lemonade",
+
+  // Phase 4: Docs
+  docsTitle: "Documentation",
+  docsDescription: "Everything you need to know about Atlas Protocol.",
+  docsLoadError: "Failed to load docs. Please try again.",
+
+  docsWhatIsAtlasTitle: "What is Atlas Protocol?",
+  docsWhatIsAtlasBody:
+    "Atlas (Agent Ticketing, Listing, And Settlement) is an open protocol that makes every event on the internet discoverable, bookable, and settleable by software agents. It standardizes how events are discovered, listed, purchased, and settled across platforms. Think of it as what DNS did for domain names, but for events.",
+
+  docsHowItWorksTitle: "How it works",
+  docsHowItWorksIntro:
+    "Atlas uses a three-layer architecture. Each layer serves a different participant while reinforcing the others.",
+  docsLayer1Title: "Layer 1: Protocol Core",
+  docsLayer1Desc:
+    "The foundation. Standardizes discovery (federated registry + well-known endpoints), listing (JSON-LD extending Schema.org), purchase (HTTP 402 + ticket holds), settlement (USDC on Tempo, sub-cent fees), and receipts (cryptographic proof of purchase).",
+  docsLayer2Title: "Layer 2: Platforms (B2B)",
+  docsLayer2Desc:
+    "Existing event platforms integrate @atlas/sdk to become Atlas-compliant. New platforms can build on Atlas as infrastructure from day one, skipping the need to build their own payments, discovery, or agent access.",
+  docsLayer3Title: "Layer 3: Organizers (B2C)",
+  docsLayer3Desc:
+    "Individual organizers connect their existing platform accounts (Eventbrite, Lu.ma, etc.) via OAuth. Their events become Atlas-discoverable instantly. No platform approval needed.",
+
+  docsApiReferenceTitle: "API Reference",
+  docsApiReferenceDesc:
+    "The Atlas Registry exposes a RESTful API for federated event search.",
+  docsApiSearchEndpoint: "GET /atlas/v1/search",
+  docsApiSearchDesc: "Search events across all connected platforms. Supports full-text search, date/location/price/category filters, and pagination.",
+  docsApiEventsEndpoint: "GET /atlas/v1/events/:id",
+  docsApiEventsDesc: "Retrieve full details for a specific event, including ticket types, pricing, and availability.",
+  docsApiHoldsEndpoint: "POST /atlas/v1/holds",
+  docsApiHoldsDesc: "Create a temporary ticket hold. Holds expire after 10 minutes if not checked out.",
+  docsApiCheckoutEndpoint: "POST /atlas/v1/holds/:id/checkout",
+  docsApiCheckoutDesc: "Complete a purchase from an existing hold. Returns a Stripe Checkout session URL or processes USDC payment.",
+  docsApiReceiptsEndpoint: "GET /atlas/v1/receipts/:id",
+  docsApiReceiptsDesc: "Retrieve a cryptographic receipt for a completed purchase.",
+  docsApiVersionHeader: "All requests require the Atlas-Version: 1.0 header.",
+
+  docsCliTitle: "CLI Reference",
+  docsCliDesc:
+    "The Atlas CLI lets you search events, manage connectors, and interact with the registry from your terminal.",
+  docsCliNpmPackage: "@lemonade-social/cli",
+  docsCliGithubRepo: "lemonadesocial/lemonade-cli",
+  docsCliInstall: "npm install -g @lemonade-social/cli",
+
+  docsPlatformsTitle: "Supported Platforms",
+  docsPlatformLemonade: "Lemonade",
+  docsPlatformLemonadeDesc: "Native platform. Full ticketing, payments, and analytics support.",
+  docsPlatformEventbrite: "Eventbrite",
+  docsPlatformEventbriteDesc: "Import events via OAuth. Ticket sales redirect to Eventbrite checkout.",
+  docsPlatformLuma: "Lu.ma",
+  docsPlatformLumaDesc: "Import events via API key. Ticket sales redirect to Lu.ma checkout.",
+
+  docsFaqTitle: "FAQ",
+  docsFaq: [
+    {
+      q: "Is Atlas free to use?",
+      a: "Atlas is free for organizers and attendees. A 2% protocol fee applies to transactions processed through Atlas settlement. There are no listing fees, subscription fees, or setup costs.",
+    },
+    {
+      q: "Do I need to leave my current event platform?",
+      a: "No. Atlas connects to your existing accounts via OAuth. Your events stay on Eventbrite, Lu.ma, or wherever you host them. Atlas makes them discoverable to more people and to AI agents.",
+    },
+    {
+      q: "How do payments work?",
+      a: "Atlas settles in USDC on Tempo with sub-cent transaction fees. Attendees can pay with cards or crypto wallets via Stripe. Organizers receive their revenue minus the 2% protocol fee.",
+    },
+    {
+      q: "What data does Atlas collect?",
+      a: "Atlas indexes public event metadata (title, date, location, price, description). It does not store personal attendee data. Purchase data is handled by the ticketing platform (Lemonade, Eventbrite, etc.) and Stripe.",
+    },
+    {
+      q: "Can AI agents use Atlas?",
+      a: "Yes. Atlas is built for agent access. Any AI agent can query the Atlas Registry API to search events, check availability, and initiate purchases programmatically.",
+    },
+    {
+      q: "How do I integrate my platform with Atlas?",
+      a: "Integrate the @atlas/sdk into your platform to become Atlas-compliant. See the API Reference section above or visit the GitHub repo for the full integration guide.",
+    },
+  ] as readonly { q: string; a: string }[],
 } as const;

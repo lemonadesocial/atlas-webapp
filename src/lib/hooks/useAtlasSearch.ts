@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { searchEvents } from "@/lib/services/atlas-client";
+import { trackEvent } from "@/lib/utils/analytics";
 import type {
   AtlasSearchParams,
   AtlasSearchResultItem,
@@ -20,6 +21,10 @@ export function useAtlasSearch() {
     setLoading(true);
     setError(null);
     setCurrentParams(params);
+
+    if (params.q) {
+      trackEvent("search_query", { query: params.q });
+    }
 
     const searchWithRetry = async (attempt: number): Promise<void> => {
       try {

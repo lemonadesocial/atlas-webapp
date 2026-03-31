@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useOnboarding, getStepRedirect } from "@/lib/hooks/useOnboarding";
+import { trackEvent } from "@/lib/utils/analytics";
 import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
 
 export default function OnboardDone() {
@@ -21,6 +22,15 @@ export default function OnboardDone() {
     const redirect = getStepRedirect(5, state);
     if (redirect) {
       router.replace(redirect);
+      return;
+    }
+    // Track onboarding funnel completion (US-NF.20)
+    if (user && !redirect) {
+      trackEvent("onboarding_funnel_complete", {
+        platforms: (state.connectedPlatforms ?? []).join(","),
+        event_count: state.importedEventCount ?? 0,
+        stripe_connected: !!state.stripeConnected,
+      });
     }
   }, [user, authLoading, router, state]);
 

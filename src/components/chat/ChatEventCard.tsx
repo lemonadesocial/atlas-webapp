@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { AtlasEvent } from "@/lib/types/atlas";
@@ -11,7 +12,7 @@ interface ChatEventCardProps {
   event: AtlasEvent;
 }
 
-export function ChatEventCard({ event }: ChatEventCardProps) {
+export const ChatEventCard = memo(function ChatEventCard({ event }: ChatEventCardProps) {
   const href = event.source_platform === "lemonade" || !event.url
     ? `/events/${event.id}`
     : event.url;
@@ -86,4 +87,4 @@ export function ChatEventCard({ event }: ChatEventCardProps) {
       {card}
     </Link>
   );
-}
+});

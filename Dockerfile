@@ -4,6 +4,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+RUN npm rebuild lightningcss
 
 FROM base AS builder
 WORKDIR /app

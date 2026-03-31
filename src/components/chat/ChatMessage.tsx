@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { ChatMessage as ChatMessageType } from "@/lib/types/chat";
 import { ToolIndicator } from "./ToolIndicator";
 import { ChatEventCard } from "./ChatEventCard";
@@ -29,7 +30,7 @@ function renderContent(content: string): React.ReactNode {
   });
 }
 
-export function ChatMessageComponent({ message }: ChatMessageProps) {
+export const ChatMessageComponent = memo(function ChatMessageComponent({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
@@ -76,4 +77,4 @@ export function ChatMessageComponent({ message }: ChatMessageProps) {
       </div>
     </div>
   );
-}
+});

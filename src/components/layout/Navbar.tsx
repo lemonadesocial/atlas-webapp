@@ -144,25 +144,25 @@ export function Navbar() {
             href="/discover"
             className="text-sm text-secondary transition-colors hover:text-primary"
           >
-            Explore
+            {STRINGS.navExplore}
           </Link>
           <Link
             href="/leaderboard"
             className="text-sm text-secondary transition-colors hover:text-primary"
           >
-            Leaderboard
+            {STRINGS.navLeaderboard}
           </Link>
           <Link
             href="/docs"
             className="text-sm text-secondary transition-colors hover:text-primary"
           >
-            Docs
+            {STRINGS.navDocs}
           </Link>
           <Link
             href="/chat"
             className="text-sm text-secondary transition-colors hover:text-primary"
           >
-            Chat
+            {STRINGS.navChat}
           </Link>
         </div>
 
@@ -269,28 +269,28 @@ export function Navbar() {
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              Explore
+              {STRINGS.navExplore}
             </Link>
             <Link
               href="/leaderboard"
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              Leaderboard
+              {STRINGS.navLeaderboard}
             </Link>
             <Link
               href="/docs"
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              Docs
+              {STRINGS.navDocs}
             </Link>
             <Link
               href="/chat"
               className="rounded-md px-3 py-2 text-sm text-secondary transition-colors hover:bg-btn-tertiary hover:text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              Chat
+              {STRINGS.navChat}
             </Link>
             {!loading && !user && (
               <button

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getItem, setItem } from "@/lib/utils/storage";
+import { trackEvent } from "@/lib/utils/analytics";
 import type { OnboardingState } from "@/lib/types/atlas";
 
 const STORAGE_KEY = "atlas_onboard_state";
@@ -72,6 +73,7 @@ export function useOnboarding() {
 
   const goToStep = useCallback(
     (step: number) => {
+      trackEvent("onboarding_step_complete", { step: step - 1 });
       updateState({ currentStep: step });
       router.push(STEP_PATHS[step - 1] || "/onboard");
     },

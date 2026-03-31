@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { ChatMessage, StreamEvent, ToolCall } from "@/lib/types/chat";
 import type { AtlasEvent } from "@/lib/types/atlas";
+import { LEMONADE_AI_URL } from "@/lib/utils/constants";
 
 // Keep at most 100 messages per session to bound memory usage
 const MAX_MESSAGES = 100;
@@ -98,9 +99,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(`${LEMONADE_AI_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           message: content.trim(),
           session_id: sessionIdRef.current,

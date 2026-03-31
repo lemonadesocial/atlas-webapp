@@ -18,13 +18,13 @@ export function getRegistryUrl(): string {
 export const ATLAS_REGISTRY_URL =
   process.env.NEXT_PUBLIC_ATLAS_REGISTRY_URL || "";
 
-// M4: Backend URL is server-only (used in API routes and SSR).
-// Client components must use /api/atlas/ BFF routes.
+// Backend URL for client-side calls (public) and server-side SSR (internal k8s).
 export const LEMONADE_BACKEND_URL =
   process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
 
-// OAuth client ID and authority are server-only in src/lib/server/config.ts.
-// NEXT_PUBLIC_OAUTH_CLIENT_ID is only used by the server-side /api/auth/start route.
+// AI service URL for client-side chat
+export const LEMONADE_AI_URL =
+  process.env.NEXT_PUBLIC_LEMONADE_AI_URL || "";
 
 // Lemonade main app URL (for dashboard/create-event links)
 export const LEMONADE_APP_URL =

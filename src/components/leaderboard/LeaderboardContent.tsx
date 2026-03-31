@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { STRINGS, CATEGORIES } from "@/lib/utils/constants";
+import { STRINGS, CATEGORIES, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 import type { LeaderboardEntry, LeaderboardResponse } from "@/lib/types/atlas";
 
 const PERIODS = [
@@ -19,8 +19,12 @@ async function fetchLeaderboard(
   const params = new URLSearchParams();
   if (period) params.set("period", period);
   if (category) params.set("category", category);
-  const url = `/api/atlas/leaderboard${params.toString() ? `?${params.toString()}` : ""}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const url = `${LEMONADE_BACKEND_URL}/atlas/v1/leaderboard${params.toString() ? `?${params.toString()}` : ""}`;
+  const res = await fetch(url, {
+    headers: { "Atlas-Agent-Id": "web:atlas-webapp", "Atlas-Version": "1.0" },
+    credentials: "include",
+    signal: AbortSignal.timeout(10000),
+  });
   // M12: Backend endpoint may not exist yet - return empty on 404
   if (res.status === 404) {
     return { entries: [], period: period || "", category: category || undefined };

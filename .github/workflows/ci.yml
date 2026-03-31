@@ -33,3 +33,4 @@ jobs:
           NEXT_PUBLIC_ATLAS_REGISTRY_URL: https://registry.example.com
           NEXT_PUBLIC_LEMONADE_BACKEND_URL: https://backend.example.com
           NEXT_PUBLIC_SITE_URL: https://atlas.example.com
+          NEXT_PUBLIC_LEMONADE_AI_URL: https://ai.example.com

@@ -7,7 +7,3 @@ export const OAUTH_AUTHORITY =
   process.env.NEXT_PUBLIC_OAUTH_AUTHORITY || "";
 export const OAUTH_CLIENT_ID =
   process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || "atlas-webapp";
-export const LEMONADE_BACKEND_URL =
-  process.env.LEMONADE_BACKEND_URL || process.env.NEXT_PUBLIC_LEMONADE_BACKEND_URL || "";
-export const LEMONADE_AI_URL =
-  process.env.LEMONADE_AI_URL || "";

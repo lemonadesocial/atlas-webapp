@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
-import { STRINGS } from "@/lib/utils/constants";
+import { STRINGS, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 import { formatPrice, timeUntil } from "@/lib/utils/format";
 import type { TicketType, PurchaseHold, CheckoutSession, Receipt } from "@/lib/types/atlas";
 
@@ -75,7 +75,10 @@ export function TicketSection({
       const maxAttempts = 20;
       for (let i = 0; i < maxAttempts; i++) {
         try {
-          const res = await fetch(`/api/atlas/receipts/by-hold/${holdId}`);
+          const res = await fetch(`${LEMONADE_BACKEND_URL}/atlas/v1/receipts/by-hold/${holdId}`, {
+            headers: { "Atlas-Agent-Id": "web:atlas-webapp", "Atlas-Version": "1.0" },
+            credentials: "include",
+          });
           if (!res.ok) throw new Error("Failed to fetch receipt");
           const data: Receipt = await res.json();
           if (data.status === "completed") {
@@ -115,9 +118,14 @@ export function TicketSection({
     try {
       // Step 1: Create hold
       const [ticketTypeId, quantity] = selectedTickets[0];
-      const holdRes = await fetch(`/api/atlas/events/${eventId}/purchase`, {
+      const holdRes = await fetch(`${LEMONADE_BACKEND_URL}/atlas/v1/events/${eventId}/purchase`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Atlas-Agent-Id": "web:atlas-webapp",
+          "Atlas-Version": "1.0",
+        },
+        credentials: "include",
         body: JSON.stringify({
           ticket_type_id: ticketTypeId,
           quantity,
@@ -132,10 +140,15 @@ export function TicketSection({
 
         // Step 2: Create checkout session
         const checkoutRes = await fetch(
-          `/api/atlas/holds/${holdData.hold_id}/checkout`,
+          `${LEMONADE_BACKEND_URL}/atlas/v1/holds/${holdData.hold_id}/checkout`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Atlas-Agent-Id": "web:atlas-webapp",
+              "Atlas-Version": "1.0",
+            },
+            credentials: "include",
             body: JSON.stringify({
               success_url: `${window.location.origin}/events/${eventId}?payment=success&hold_id=${holdData.hold_id}`,
               cancel_url: `${window.location.origin}/events/${eventId}?payment=cancelled&hold_id=${holdData.hold_id}`,

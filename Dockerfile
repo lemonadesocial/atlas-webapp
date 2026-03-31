@@ -2,8 +2,8 @@ FROM node:20-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
@@ -15,7 +15,7 @@ ARG NEXT_PUBLIC_LEMONADE_BACKEND_URL
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_NOMINATIM_URL
 
-RUN npm run build
+RUN yarn build
 
 FROM base AS runner
 WORKDIR /app

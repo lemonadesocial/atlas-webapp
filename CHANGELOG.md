@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.0...v1.0.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* enable HTTPS and turbopack for local dev ([0c1318b](https://github.com/lemonadesocial/atlas-webapp/commit/0c1318b0baa55a5097756b861ec7ebd318570746))
+* remove auth-callback test referencing deleted OAuth helpers ([e6579cd](https://github.com/lemonadesocial/atlas-webapp/commit/e6579cd6eb515c8daaaf35b83a156cc6dbb90d90))
+* replace OAuth/Hydra flow with direct identity service redirect ([199d469](https://github.com/lemonadesocial/atlas-webapp/commit/199d469e979b22645fc5cce1dc0b3ad03745a98d))
+* restore server-side logout route with Kratos session invalidation ([4c517d1](https://github.com/lemonadesocial/atlas-webapp/commit/4c517d17d05ac1c1980d1f52b51ce0ca2fb3ba1d))
+* update .env.example with staging defaults for local dev ([82802e5](https://github.com/lemonadesocial/atlas-webapp/commit/82802e5ad82bfd950a9c4f793cf2d6106abafeac))
+* use logout_token API call instead of redirecting to logout_url ([6708616](https://github.com/lemonadesocial/atlas-webapp/commit/6708616820b09a4ad339bb34c34d4e90d7c37875))
+* use port 8001 for local dev to match Kratos allowed return URLs ([7a5c3e7](https://github.com/lemonadesocial/atlas-webapp/commit/7a5c3e7480913f1f85980f010594e61421f7dfe4))
+
 ## 1.0.0 (2026-03-31)
 
 

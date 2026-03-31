@@ -1,103 +1,110 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { ChatContainer } from "./ChatContainer";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function FloatingChatWidget() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isOnChatPage = pathname === "/chat";
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
 
-  // Close on Escape
+  // Focus management: move focus into panel on open, return to button on close
+  useEffect(() => {
+    if (open) {
+      // Small delay so the panel is rendered before focusing
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    } else {
+      buttonRef.current?.focus();
+    }
+  }, [open]);
+
+  // Close on Escape + focus trap
   useEffect(() => {
     if (!open) return;
+
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      // Focus trap: cycle Tab within the panel
+      if (e.key === "Tab" && panelRef.current) {
+        const focusable = panelRef.current.querySelectorAll(FOCUSABLE_SELECTOR);
+        if (focusable.length === 0) return;
+
+        const first = focusable[0] as HTMLElement;
+        const last = focusable[focusable.length - 1] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
+
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
-  // Hide widget on the dedicated /chat page
   if (isOnChatPage) return null;
 
   return (
     <>
-      {/* Chat panel */}
+      {/* Single chat panel, responsive styling */}
       {open && (
-        <>
-          {/* Mobile: full-screen overlay */}
-          <div
-            className="fixed inset-0 z-[60] flex flex-col bg-background md:hidden"
-            role="dialog"
-            aria-label="Chat"
-            aria-modal="true"
-          >
-            <div className="flex items-center justify-between border-b border-divider px-4 py-3">
-              <span className="text-sm font-semibold text-primary font-display">
-                Atlas Chat
-              </span>
-              <button
-                onClick={toggle}
-                className="rounded-md p-1 text-secondary transition-colors hover:text-primary"
-                aria-label="Close chat"
+        <div
+          ref={panelRef}
+          className="fixed inset-0 z-[55] flex flex-col bg-background md:inset-auto md:bottom-20 md:right-4 md:h-[600px] md:w-[400px] md:rounded-xl md:border md:border-divider md:shadow-2xl"
+          role="dialog"
+          aria-label="Chat"
+          aria-modal="true"
+        >
+          <div className="flex items-center justify-between border-b border-divider px-4 py-3">
+            <span className="text-sm font-semibold text-primary font-display">
+              Atlas Chat
+            </span>
+            <button
+              onClick={toggle}
+              className="rounded-md p-1 text-secondary transition-colors hover:text-primary"
+              aria-label="Close chat"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <ChatContainer className="flex-1" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
           </div>
-
-          {/* Desktop: side panel */}
-          <div
-            className="fixed bottom-20 right-4 z-[60] hidden h-[600px] w-[400px] flex-col overflow-hidden rounded-xl border border-divider bg-background shadow-2xl md:flex"
-            role="dialog"
-            aria-label="Chat"
-          >
-            <div className="flex items-center justify-between border-b border-divider px-4 py-3">
-              <span className="text-sm font-semibold text-primary font-display">
-                Atlas Chat
-              </span>
-              <button
-                onClick={toggle}
-                className="rounded-md p-1 text-secondary transition-colors hover:text-primary"
-                aria-label="Close chat"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <ChatContainer className="flex-1" />
-          </div>
-        </>
+          <ChatContainer className="flex-1" inputRef={inputRef} />
+        </div>
       )}
 
       {/* Floating button */}
       <button
+        ref={buttonRef}
         onClick={toggle}
         className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
         aria-label={open ? "Close chat" : "Open chat"}

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 afterEach(() => {
@@ -31,13 +31,30 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+const mockSignIn = vi.fn();
 vi.mock("@/lib/hooks/useAuth", () => ({
   useAuth: () => ({
     user: null,
     loading: false,
-    signIn: vi.fn(),
+    signIn: mockSignIn,
     signOut: vi.fn(),
     refresh: vi.fn(),
+  }),
+}));
+
+let mockPathname = "/";
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname,
+}));
+
+vi.mock("@/lib/hooks/useChat", () => ({
+  useChat: () => ({
+    messages: [],
+    isLoading: false,
+    error: null,
+    sendMessage: vi.fn(),
+    clearMessages: vi.fn(),
+    sessionId: "test-session",
   }),
 }));
 
@@ -46,6 +63,9 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatEventCard } from "@/components/chat/ChatEventCard";
 import { ToolIndicator } from "@/components/chat/ToolIndicator";
 import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
+import { FloatingChatWidget } from "@/components/chat/FloatingChatWidget";
+import { AuthPrompt } from "@/components/chat/AuthPrompt";
+import { ChatProvider } from "@/components/chat/ChatProvider";
 import type { ChatMessage, ToolCall } from "@/lib/types/chat";
 import type { AtlasEvent } from "@/lib/types/atlas";
 
@@ -264,5 +284,89 @@ describe("SuggestedPrompts", () => {
     expect(
       screen.getByLabelText("Ask: Find events near me this weekend")
     ).toBeTruthy();
+  });
+});
+
+describe("FloatingChatWidget", () => {
+  beforeEach(() => {
+    mockPathname = "/";
+  });
+
+  it("renders the floating button", () => {
+    render(
+      <ChatProvider>
+        <FloatingChatWidget />
+      </ChatProvider>
+    );
+    expect(screen.getByLabelText("Open chat")).toBeTruthy();
+  });
+
+  it("opens chat panel on button click", () => {
+    render(
+      <ChatProvider>
+        <FloatingChatWidget />
+      </ChatProvider>
+    );
+    fireEvent.click(screen.getByLabelText("Open chat"));
+    expect(screen.getByRole("dialog", { name: "Chat" })).toBeTruthy();
+  });
+
+  it("closes chat panel on close button click", () => {
+    render(
+      <ChatProvider>
+        <FloatingChatWidget />
+      </ChatProvider>
+    );
+    fireEvent.click(screen.getByLabelText("Open chat"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeTruthy();
+    // Click the close button inside the dialog panel (not the floating button)
+    const panelClose = dialog.querySelector('[aria-label="Close chat"]') as HTMLElement;
+    fireEvent.click(panelClose);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes on Escape key", () => {
+    render(
+      <ChatProvider>
+        <FloatingChatWidget />
+      </ChatProvider>
+    );
+    fireEvent.click(screen.getByLabelText("Open chat"));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not render on /chat page", () => {
+    mockPathname = "/chat";
+    const { container } = render(
+      <ChatProvider>
+        <FloatingChatWidget />
+      </ChatProvider>
+    );
+    expect(container.innerHTML).toBe("");
+  });
+});
+
+describe("AuthPrompt", () => {
+  it("renders sign-in prompt text", () => {
+    render(<AuthPrompt />);
+    expect(
+      screen.getByText("Sign in to manage events, view ticket sales, and more.")
+    ).toBeTruthy();
+  });
+
+  it("renders sign-in button with ARIA label", () => {
+    render(<AuthPrompt />);
+    const button = screen.getByLabelText("Sign in for full chat access");
+    expect(button).toBeTruthy();
+    expect(button.textContent).toBe("Sign In");
+  });
+
+  it("calls signIn with /chat on click", () => {
+    render(<AuthPrompt />);
+    fireEvent.click(screen.getByLabelText("Sign in for full chat access"));
+    expect(mockSignIn).toHaveBeenCalledWith("/chat");
   });
 });

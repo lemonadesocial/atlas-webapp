@@ -1,19 +1,19 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { useChat } from "@/lib/hooks/useChat";
+import { useChatContext } from "./ChatProvider";
 import { ChatMessageComponent } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { SuggestedPrompts } from "./SuggestedPrompts";
 
 interface ChatContainerProps {
   className?: string;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-export function ChatContainer({ className = "" }: ChatContainerProps) {
-  const { messages, isLoading, error, sendMessage, clearMessages } = useChat();
+export function ChatContainer({ className = "", inputRef }: ChatContainerProps) {
+  const { messages, isLoading, error, sendMessage, clearMessages } = useChatContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,7 +45,6 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
 
       {/* Messages area */}
       <div
-        ref={scrollContainerRef}
         className="flex-1 overflow-y-auto"
         role="list"
         aria-label="Chat messages"
@@ -83,7 +82,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isLoading} />
+      <ChatInput onSend={handleSend} disabled={isLoading} ref={inputRef} />
     </div>
   );
 }

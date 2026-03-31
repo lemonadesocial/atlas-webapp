@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { ChatMessage, StreamEvent, ToolCall } from "@/lib/types/chat";
 import type { AtlasEvent } from "@/lib/types/atlas";
+
+// Keep at most 100 messages per session to bound memory usage
+const MAX_MESSAGES = 100;
 
 let nextId = 1;
 function generateId(): string {
@@ -32,6 +35,11 @@ export function parseSSEStream(chunk: string): StreamEvent[] {
   return events;
 }
 
+function trimMessages(msgs: ChatMessage[]): ChatMessage[] {
+  if (msgs.length <= MAX_MESSAGES) return msgs;
+  return msgs.slice(msgs.length - MAX_MESSAGES);
+}
+
 interface UseChatOptions {
   sessionId?: string;
 }
@@ -51,6 +59,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const [error, setError] = useState<string | null>(null);
   const sessionIdRef = useRef(options.sessionId || `session_${Date.now()}`);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Abort any active stream on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -75,7 +90,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       events: [],
     };
 
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setMessages((prev) => trimMessages([...prev, userMessage, assistantMessage]));
     setIsLoading(true);
 
     abortRef.current?.abort();

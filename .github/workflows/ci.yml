@@ -35,3 +35,4 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://atlas.example.com
           NEXT_PUBLIC_LEMONADE_AI_URL: https://ai.example.com
           NEXT_PUBLIC_KRATOS_PUBLIC_URL: https://kratos.example.com
+          NEXT_PUBLIC_IDENTITY_URL: https://identity.example.com

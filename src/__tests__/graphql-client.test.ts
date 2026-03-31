@@ -12,7 +12,7 @@ describe("graphqlRequest", () => {
     globalThis.fetch = originalFetch;
   });
 
-  it("sends GraphQL request to /api/graphql", async () => {
+  it("sends GraphQL request to backend directly", async () => {
     const mockResponse = { data: { getMe: { _id: "123", username: "test" } } };
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -22,56 +22,15 @@ describe("graphqlRequest", () => {
 
     const result = await graphqlRequest("query { getMe { _id username } }");
     expect(result).toEqual(mockResponse);
-    expect(globalThis.fetch).toHaveBeenCalledWith("/api/graphql", {
+    expect(globalThis.fetch).toHaveBeenCalledWith("/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ query: "query { getMe { _id username } }" }),
     });
   });
 
-  it("retries on 401 by refreshing token", async () => {
-    const mockResponse = { data: { getMe: { _id: "123" } } };
-    let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url === "/api/graphql") {
-        callCount++;
-        if (callCount === 1) {
-          return Promise.resolve({ ok: false, status: 401 });
-        }
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockResponse),
-        });
-      }
-      if (url === "/api/auth/refresh") {
-        return Promise.resolve({ ok: true });
-      }
-      return Promise.resolve({ ok: false, status: 404 });
-    });
-
-    const result = await graphqlRequest("query { getMe { _id } }");
-    expect(result).toEqual(mockResponse);
-    expect(globalThis.fetch).toHaveBeenCalledTimes(3); // original + refresh + retry
-  });
-
-  it("throws on 401 when refresh also fails", async () => {
-    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url === "/api/graphql") {
-        return Promise.resolve({ ok: false, status: 401 });
-      }
-      if (url === "/api/auth/refresh") {
-        return Promise.resolve({ ok: false, status: 401 });
-      }
-      return Promise.resolve({ ok: false, status: 404 });
-    });
-
-    await expect(graphqlRequest("query { getMe { _id } }")).rejects.toThrow(
-      "Session expired"
-    );
-  });
-
-  it("throws on non-401 error", async () => {
+  it("throws on error response", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,

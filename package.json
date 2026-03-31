@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --experimental-https -H localhost.staging.lemonade.social",
+    "dev": "next dev --turbopack --experimental-https -H localhost.staging.lemonade.social -p 8001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

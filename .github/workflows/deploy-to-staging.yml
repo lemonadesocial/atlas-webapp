@@ -57,8 +57,7 @@ jobs:
           tags: |
             ${{ env.REPOSITORY_URI }}:${{ env.GITHUB_SHA }}
             ${{ env.REPOSITORY_URI }}:release
-          cache-from: type=registry,ref=${{ env.REPOSITORY_URI }}:release
-          cache-to: type=inline
+          no-cache: true
 
   deploy:
     needs: buildAndPush

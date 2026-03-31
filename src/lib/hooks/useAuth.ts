@@ -30,7 +30,7 @@ export { AuthContext };
 const ME_CACHE_TTL = 60_000; // 1 minute
 let meCache: { user: AuthUser | null; ts: number } | null = null;
 
-const ME_QUERY = `query { aiGetMe { _id username display_name image_avatar stripe_connected_account { account_id connected } } }`;
+const ME_QUERY = `query { getMe { _id username display_name image_avatar stripe_connected_account { account_id connected } } }`;
 
 export function useAuthProvider(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -58,7 +58,7 @@ export function useAuthProvider(): AuthState {
         return;
       }
       const json = await res.json();
-      const fetched = json?.data?.aiGetMe ?? null;
+      const fetched = json?.data?.getMe ?? null;
       meCache = { user: fetched, ts: Date.now() };
       setUser(fetched);
     } catch {

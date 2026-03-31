@@ -26,10 +26,6 @@ export const LEMONADE_BACKEND_URL =
 export const LEMONADE_AI_URL =
   process.env.NEXT_PUBLIC_LEMONADE_AI_URL || "";
 
-// Kratos public URL for auth (logout, session check)
-export const KRATOS_PUBLIC_URL =
-  process.env.NEXT_PUBLIC_KRATOS_PUBLIC_URL || "";
-
 // Lemonade main app URL (for dashboard/create-event links)
 export const LEMONADE_APP_URL =
   process.env.NEXT_PUBLIC_LEMONADE_APP_URL || "https://app.lemonade.social";

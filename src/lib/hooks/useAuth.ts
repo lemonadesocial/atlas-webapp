@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import type { AuthUser } from "@/lib/types/atlas";
-import { LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
+import { LEMONADE_BACKEND_URL, KRATOS_PUBLIC_URL } from "@/lib/utils/constants";
 
 interface AuthState {
   user: AuthUser | null;
@@ -81,7 +81,27 @@ export function useAuthProvider(): AuthState {
 
   const signOut = useCallback(async () => {
     meCache = null;
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      // Call Kratos to create and execute browser logout flow
+      const res = await fetch(`${KRATOS_PUBLIC_URL}/self-service/logout/browser`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logout_url) {
+          window.location.href = data.logout_url;
+          return;
+        }
+        if (data.logout_token) {
+          await fetch(`${KRATOS_PUBLIC_URL}/self-service/logout?token=${data.logout_token}`, {
+            method: "GET",
+            credentials: "include",
+          });
+        }
+      }
+    } catch {
+      // Continue with local cleanup even if Kratos call fails
+    }
     setUser(null);
     window.location.href = "/";
   }, []);

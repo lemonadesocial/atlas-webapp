@@ -4,7 +4,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-RUN npm rebuild lightningcss
+RUN npm install --no-save lightningcss-linux-x64-musl
 
 FROM base AS builder
 WORKDIR /app

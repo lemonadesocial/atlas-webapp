@@ -1,39 +1,14 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { ChatMessage, StreamEvent, ToolCall } from "@/lib/types/chat";
-import type { AtlasEvent } from "@/lib/types/atlas";
-import { LEMONADE_AI_URL } from "@/lib/utils/constants";
+import type { ChatMessage } from "@/lib/types/chat";
 
-// Keep at most 100 messages per session to bound memory usage
 const MAX_MESSAGES = 100;
+const AI_CONFIG = process.env.NEXT_PUBLIC_AI_CONFIG || "";
 
 let nextId = 1;
 function generateId(): string {
   return `msg_${Date.now()}_${nextId++}`;
-}
-
-function parseSSELine(line: string): StreamEvent | null {
-  if (!line.startsWith("data: ")) return null;
-  const data = line.slice(6);
-  if (data === "[DONE]") return { type: "done" };
-  try {
-    return JSON.parse(data) as StreamEvent;
-  } catch {
-    return null;
-  }
-}
-
-export function parseSSEStream(chunk: string): StreamEvent[] {
-  const events: StreamEvent[] = [];
-  const lines = chunk.split("\n");
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const event = parseSSELine(trimmed);
-    if (event) events.push(event);
-  }
-  return events;
 }
 
 function trimMessages(msgs: ChatMessage[]): ChatMessage[] {
@@ -54,6 +29,16 @@ interface UseChatReturn {
   sessionId: string;
 }
 
+const RUN_MUTATION = `
+  mutation RunAIChat($message: String!, $config: ObjectId!, $session: String, $data: JSON) {
+    run(message: $message, config: $config, session: $session, data: $data) {
+      message
+      sourceDocuments
+      metadata
+    }
+  }
+`;
+
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +46,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const sessionIdRef = useRef(options.sessionId || `session_${Date.now()}`);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Abort any active stream on unmount
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -70,6 +54,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
+
+    if (!AI_CONFIG) {
+      setError("Chat is not available yet");
+      return;
+    }
 
     setError(null);
 
@@ -87,8 +76,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       content: "",
       timestamp: Date.now(),
       isStreaming: true,
-      toolCalls: [],
-      events: [],
     };
 
     setMessages((prev) => trimMessages([...prev, userMessage, assistantMessage]));
@@ -99,117 +86,44 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     abortRef.current = controller;
 
     try {
-      if (!LEMONADE_AI_URL) {
-        throw new Error("Chat is not available yet");
-      }
-
-      const res = await fetch(`${LEMONADE_AI_URL}/api/chat`, {
+      const res = await fetch("/api/ai/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          message: content.trim(),
-          session_id: sessionIdRef.current,
+          query: RUN_MUTATION,
+          variables: {
+            message: content.trim(),
+            config: AI_CONFIG,
+            session: sessionIdRef.current,
+            data: {},
+          },
         }),
         signal: controller.signal,
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(
-          (errorData as { error?: string }).error || `Chat request failed (${res.status})`
-        );
+        throw new Error(`Chat request failed (${res.status})`);
       }
 
-      if (!res.body) {
-        throw new Error("No response stream");
+      const json = await res.json();
+
+      if (json.errors?.length) {
+        throw new Error(json.errors[0].message || "Chat request failed");
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = "";
-      let accumulatedTools: ToolCall[] = [];
-      let accumulatedEvents: AtlasEvent[] = [];
+      const reply = json.data?.run?.message || "No response";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const events = parseSSEStream(chunk);
-
-        for (const event of events) {
-          switch (event.type) {
-            case "text_delta":
-              if (event.text) {
-                accumulatedText += event.text;
-              }
-              break;
-
-            case "tool_start":
-              if (event.tool) {
-                accumulatedTools = [
-                  ...accumulatedTools,
-                  {
-                    id: event.tool.id,
-                    name: event.tool.name,
-                    displayName: event.tool.displayName || event.tool.name,
-                    status: "running",
-                  },
-                ];
-              }
-              break;
-
-            case "tool_end":
-              if (event.tool) {
-                accumulatedTools = accumulatedTools.map((t) =>
-                  t.id === event.tool!.id
-                    ? { ...t, status: "complete" as const, result: event.result }
-                    : t
-                );
-              }
-              break;
-
-            case "event_results":
-              if (event.events) {
-                accumulatedEvents = [...accumulatedEvents, ...event.events];
-              }
-              break;
-
-            case "error":
-              setError(event.error || "An error occurred");
-              break;
-
-            case "done":
-              break;
-          }
-
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantId
-                ? {
-                    ...msg,
-                    content: accumulatedText,
-                    toolCalls: accumulatedTools,
-                    events: accumulatedEvents,
-                    isStreaming: event.type !== "done",
-                  }
-                : msg
-            )
-          );
-        }
-      }
-
-      // Finalize message
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === assistantId ? { ...msg, isStreaming: false } : msg
+          msg.id === assistantId
+            ? { ...msg, content: reply, isStreaming: false }
+            : msg
         )
       );
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
-      const message =
-        err instanceof Error ? err.message : "Failed to send message";
+      const message = err instanceof Error ? err.message : "Failed to send message";
       setError(message);
       setMessages((prev) =>
         prev.map((msg) =>

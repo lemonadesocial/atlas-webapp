@@ -11,6 +11,7 @@ import { ShareButton } from "./ShareButton";
 import { formatDate } from "@/lib/utils/format";
 import { SITE_URL, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 import { validateEventId } from "@/lib/utils/escape";
+import { mapSchemaOrgEvent } from "@/lib/services/atlas-client";
 import type { AtlasEventDetail, TicketType } from "@/lib/types/atlas";
 
 interface Props {
@@ -65,7 +66,8 @@ export function EventDetailContent({ eventId }: Props) {
           return false;
         }
 
-        setEvent(eventRes.value);
+        const mapped = mapSchemaOrgEvent(eventRes.value as Record<string, unknown>);
+        setEvent(mapped as AtlasEventDetail);
         if (ticketsRes.status === "fulfilled") {
           setTickets(ticketsRes.value.ticket_types || []);
         }

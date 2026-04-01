@@ -21,7 +21,7 @@ async function registryFetch<T>(
 }
 
 // Map Schema.org event format from the API to the flat AtlasEvent format the UI expects
-function mapSchemaOrgEvent(raw: Record<string, unknown>): AtlasEvent {
+export function mapSchemaOrgEvent(raw: Record<string, unknown>): AtlasEvent {
   const location = raw.location as Record<string, unknown> | undefined;
   const organizer = raw.organizer as Record<string, unknown> | undefined;
   const priceRange = raw["atlas:price_range"] as Record<string, unknown> | undefined;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL, STRINGS, LEMONADE_BACKEND_URL } from "@/lib/utils/constants";
 import { validateEventId } from "@/lib/utils/escape";
+import { mapSchemaOrgEvent } from "@/lib/services/atlas-client";
 import { EventDetailContent } from "@/components/event/EventDetailContent";
 import { EventJsonLd } from "./EventJsonLd";
 
@@ -19,7 +20,8 @@ async function fetchEvent(id: string) {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
-    return res.json();
+    const raw = await res.json();
+    return mapSchemaOrgEvent(raw as Record<string, unknown>);
   } catch {
     return null;
   }

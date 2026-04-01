@@ -1,5 +1,5 @@
 import { getRegistryUrl } from "@/lib/utils/constants";
-import type { AtlasSearchParams, AtlasSearchResult } from "@/lib/types/atlas";
+import type { AtlasEvent, AtlasSearchParams, AtlasSearchResult } from "@/lib/types/atlas";
 
 async function registryFetch<T>(
   path: string,
@@ -20,6 +20,36 @@ async function registryFetch<T>(
   return json["atlas:search_result"] ?? json;
 }
 
+// Map Schema.org event format from the API to the flat AtlasEvent format the UI expects
+function mapSchemaOrgEvent(raw: Record<string, unknown>): AtlasEvent {
+  const location = raw.location as Record<string, unknown> | undefined;
+  const organizer = raw.organizer as Record<string, unknown> | undefined;
+  const priceRange = raw["atlas:price_range"] as Record<string, unknown> | undefined;
+
+  return {
+    id: (raw["atlas:source_event_id"] as string) ?? (raw["@id"] as string) ?? "",
+    title: (raw.name as string) ?? "",
+    description: (raw.description as string) ?? "",
+    start: (raw.startDate as string) ?? "",
+    end: (raw.endDate as string) ?? undefined,
+    location: location?.name as string | undefined,
+    city: location?.["address"] ? (location["address"] as Record<string, unknown>)?.["addressLocality"] as string : undefined,
+    country: location?.["address"] ? (location["address"] as Record<string, unknown>)?.["addressCountry"] as string : undefined,
+    latitude: location?.["geo"] ? (location["geo"] as Record<string, unknown>)?.["latitude"] as number : undefined,
+    longitude: location?.["geo"] ? (location["geo"] as Record<string, unknown>)?.["longitude"] as number : undefined,
+    url: raw.url as string | undefined,
+    source_platform: (raw["atlas:source_platform"] as string) ?? "lemonade",
+    source_id: raw["atlas:source_event_id"] as string | undefined,
+    category: (raw["atlas:categories"] as string[] | undefined)?.[0],
+    tags: raw["atlas:tags"] as string[] | undefined,
+    min_price: priceRange?.min_price as number | undefined,
+    max_price: priceRange?.max_price as number | undefined,
+    currency: priceRange?.currency as string | undefined,
+    availability: raw["atlas:availability"] as AtlasEvent["availability"],
+    organizer_name: organizer?.name as string | undefined,
+  };
+}
+
 export async function searchEvents(
   params: AtlasSearchParams
 ): Promise<AtlasSearchResult> {
@@ -30,9 +60,19 @@ export async function searchEvents(
     }
   });
 
-  return registryFetch<AtlasSearchResult>(
+  const result = await registryFetch<AtlasSearchResult>(
     `/atlas/v1/search?${searchParams.toString()}`
   );
+
+  // Map Schema.org events to flat AtlasEvent format
+  if (result.results) {
+    result.results = result.results.map((item) => ({
+      ...item,
+      event: mapSchemaOrgEvent(item.event as unknown as Record<string, unknown>),
+    }));
+  }
+
+  return result;
 }
 
 export async function getStatsFallback(): Promise<{

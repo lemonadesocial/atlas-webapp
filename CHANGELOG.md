@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.2...v1.0.3) (2026-04-01)
+
+
+### Bug Fixes
+
+* map Schema.org event format to flat AtlasEvent type ([56a1c93](https://github.com/lemonadesocial/atlas-webapp/commit/56a1c93f928b772b13a797b001d73fe182a6eadb))
+
 ## [1.0.2](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.1...v1.0.2) (2026-03-31)
 
 

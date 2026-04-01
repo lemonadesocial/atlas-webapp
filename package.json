@@ -1,6 +1,6 @@
 {
   "name": "atlas-webapp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --experimental-https -H localhost.staging.lemonade.social -p 8001",

@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type { ChatMessage } from "@/lib/types/chat";
 
 const MAX_MESSAGES = 100;
+const AI_API_URL = process.env.NEXT_PUBLIC_AI_API_HTTP || "";
 const AI_CONFIG = process.env.NEXT_PUBLIC_AI_CONFIG || "";
 
 let nextId = 1;
@@ -55,7 +56,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    if (!AI_CONFIG) {
+    if (!AI_API_URL || !AI_CONFIG) {
       setError("Chat is not available yet");
       return;
     }
@@ -86,7 +87,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("/api/ai/graphql", {
+      const res = await fetch(AI_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -56,7 +56,7 @@ export function mapAtlasTicketType(raw: Record<string, unknown>): import("@/lib/
   const availability = raw["atlas:availability"] as Record<string, unknown> | undefined;
 
   return {
-    id: (raw["atlas:ticket_type_id"] as string) ?? (raw.id as string) ?? "",
+    id: (raw["atlas:source_ticket_type_id"] as string) ?? (raw["atlas:ticket_type_id"] as string) ?? (raw.id as string) ?? "",
     name: (raw.name as string) ?? "",
     price: (pricing?.base_price as number) ?? (pricing?.total_price as number) ?? 0,
     currency: (pricing?.currency as string) ?? "USD",

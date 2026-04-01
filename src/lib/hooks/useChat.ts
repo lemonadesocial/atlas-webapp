@@ -99,6 +99,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     abortRef.current = controller;
 
     try {
+      if (!LEMONADE_AI_URL) {
+        throw new Error("Chat is not available yet");
+      }
+
       const res = await fetch(`${LEMONADE_AI_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

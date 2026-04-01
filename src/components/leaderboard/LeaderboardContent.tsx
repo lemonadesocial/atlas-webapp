@@ -25,11 +25,10 @@ async function fetchLeaderboard(
     credentials: "include",
     signal: AbortSignal.timeout(10000),
   });
-  // M12: Backend endpoint may not exist yet - return empty on 404
-  if (res.status === 404) {
+  // Backend endpoint may not exist yet - return empty on any error
+  if (!res.ok) {
     return { entries: [], period: period || "", category: category || undefined };
   }
-  if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
   return res.json();
 }
 

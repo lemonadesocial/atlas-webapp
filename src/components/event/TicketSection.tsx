@@ -124,6 +124,7 @@ export function TicketSection({
           "Content-Type": "application/json",
           "Atlas-Agent-Id": "web:atlas-webapp",
           "Atlas-Version": "1.0",
+          "Idempotency-Key": `purchase_${eventId}_${ticketTypeId}_${Date.now()}`,
         },
         credentials: "include",
         body: JSON.stringify({

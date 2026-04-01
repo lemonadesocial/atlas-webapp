@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.3...v1.0.4) (2026-04-01)
+
+
+### Bug Fixes
+
+* map Schema.org format on event detail page ([abb518b](https://github.com/lemonadesocial/atlas-webapp/commit/abb518bedbec0cf09121b99333f2ce52d3ab723a))
+
 ## [1.0.3](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.2...v1.0.3) (2026-04-01)
 
 

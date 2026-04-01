@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.4...v1.1.0) (2026-04-01)
+
+
+### Features
+
+* rewrite chat to use lemonade-ai GraphQL run mutation ([9b445a9](https://github.com/lemonadesocial/atlas-webapp/commit/9b445a9c2705b2792525fa0496fdced0ae536f34))
+* rewrite chat to use lemonade-ai GraphQL run mutation ([6496836](https://github.com/lemonadesocial/atlas-webapp/commit/6496836d2a8897b062e90dfee3094d55c2f5eaab))
+
+
+### Bug Fixes
+
+* handle missing leaderboard and chat backends gracefully ([d192ff0](https://github.com/lemonadesocial/atlas-webapp/commit/d192ff03eb86197bf2d0838dc3439de8871d5f58))
+* map ticket types from Atlas format and add Idempotency-Key header ([210def3](https://github.com/lemonadesocial/atlas-webapp/commit/210def38245968f8627e3f6c4cba48d6db75a3fc))
+* prefer atlas:source_ticket_type_id for purchase requests ([20be2c6](https://github.com/lemonadesocial/atlas-webapp/commit/20be2c6e4ee8ce2b8e5410c9e6ce6988c0ebfeff))
+
 ## [1.0.4](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.3...v1.0.4) (2026-04-01)
 
 

@@ -5,11 +5,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { SearchBar } from "@/components/discover/SearchBar";
 import { FilterBar, type FilterValues } from "@/components/discover/FilterBar";
 import { EventGrid } from "@/components/discover/EventGrid";
+import { EventCard } from "@/components/discover/EventCard";
+import { EventGridSkeleton } from "@/components/discover/EventCardSkeleton";
 import { MapView } from "@/components/discover/MapView";
 import { ViewToggle } from "@/components/discover/ViewToggle";
 import { useAtlasSearch } from "@/lib/hooks/useAtlasSearch";
+import { searchEvents } from "@/lib/services/atlas-client";
 import { getDateRange } from "@/lib/utils/format";
-import type { AtlasSearchParams } from "@/lib/types/atlas";
+import { STRINGS, RECENTLY_HAPPENED_LIMIT } from "@/lib/utils/constants";
+import type { AtlasSearchParams, AtlasSearchResultItem } from "@/lib/types/atlas";
 
 const DEFAULT_FILTERS: FilterValues = {
   dateFilter: "",
@@ -20,6 +24,15 @@ const DEFAULT_FILTERS: FilterValues = {
   sort: "",
 };
 
+function isDefaultState(q: string, f: FilterValues): boolean {
+  return (
+    !q &&
+    !f.dateFilter && !f.city && !f.lat && !f.lng &&
+    f.categories.length === 0 && !f.source_platform &&
+    !f.priceMode && !f.sort
+  );
+}
+
 export function DiscoverContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -27,6 +40,8 @@ export function DiscoverContent() {
     useAtlasSearch();
   const [view, setView] = useState<"grid" | "map">("grid");
   const initializedRef = useRef(false);
+  const [recentPast, setRecentPast] = useState<AtlasSearchResultItem[]>([]);
+  const [recentPastLoading, setRecentPastLoading] = useState(false);
   const [filters, setFilters] = useState<FilterValues>(() => ({
     dateFilter: searchParams.get("date") || "",
     city: searchParams.get("city") || "",
@@ -110,6 +125,29 @@ export function DiscoverContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  // Fetch recently-happened events only when in the fully default state (no query, no filters)
+  useEffect(() => {
+    const q = searchParams.get("q") ?? "";
+    if (!isDefaultState(q, filters)) {
+      setRecentPast([]);
+      return;
+    }
+    setRecentPastLoading(true);
+    const now = new Date();
+    const twoYearsAgo = new Date(now);
+    twoYearsAgo.setFullYear(now.getFullYear() - 2);
+    searchEvents({
+      date_from: twoYearsAgo.toISOString(),
+      date_to: now.toISOString(),
+      sort: "date_desc",
+      per_page: RECENTLY_HAPPENED_LIMIT,
+    })
+      .then((data) => setRecentPast(data.results))
+      .catch(() => setRecentPast([]))
+      .finally(() => setRecentPastLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchParams]);
+
   const mapCenter =
     filters.lat && filters.lng
       ? { lat: filters.lat, lng: filters.lng }
@@ -162,6 +200,26 @@ export function DiscoverContent() {
             />
           </div>
         </div>
+      )}
+
+      {/* Recently happened — only shown in the default (no filter, no query) state */}
+      {recentPastLoading && recentPast.length === 0 && (
+        <EventGridSkeleton />
+      )}
+      {recentPast.length > 0 && (
+        <section aria-label="Recently happened events">
+          <h2 className="mb-4 text-lg font-semibold text-primary">
+            {STRINGS.recentlyHappened}
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {recentPast.map((item) => (
+              <EventCard
+                key={item.event.id || item.event.source_id}
+                event={item.event}
+              />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

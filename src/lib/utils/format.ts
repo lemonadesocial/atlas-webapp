@@ -88,6 +88,12 @@ export function getDateRange(filter: string): {
         date_to: end.toISOString(),
       };
     }
+    case "past": {
+      const end = new Date(today);
+      const start = new Date(today);
+      start.setFullYear(start.getFullYear() - 2);
+      return { date_from: start.toISOString(), date_to: end.toISOString() };
+    }
     default:
       return {};
   }

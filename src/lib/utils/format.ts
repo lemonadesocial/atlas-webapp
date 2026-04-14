@@ -17,18 +17,34 @@ export function formatDateShort(dateStr: string): string {
   }).format(date);
 }
 
+// Stablecoins are displayed as their fiat equivalent for a cleaner UX
+const STABLECOIN_DISPLAY: Record<string, string> = {
+  USDC: "USD",
+  USDT: "USD",
+};
+
 export function formatPrice(
   amount: number | undefined,
   currency?: string
 ): string {
   if (amount === undefined || amount === null) return "Free";
   if (amount === 0) return "Free";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency || "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  const curr = (currency ?? "USD").toUpperCase();
+  const displayCurrency = STABLECOIN_DISPLAY[curr] ?? curr;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: displayCurrency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Non-ISO currency code (ETH, MATIC, custom tokens) — show number + symbol
+    return `${amount.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    })} ${curr}`;
+  }
 }
 
 export function formatPriceRange(

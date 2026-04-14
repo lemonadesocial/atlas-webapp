@@ -7,14 +7,19 @@ vi.mock("@/lib/services/atlas-client", () => ({
   searchEvents: (...args: unknown[]) => mockSearchEvents(...args),
 }));
 
-const makeResult = (count: number, hasNext = false) => ({
+const makeResult = (count: number, hasNext = false, startIndex = 0) => ({
   total_results: count,
   page: 1,
   per_page: 12,
   total_pages: 1,
   has_next: hasNext,
   results: Array.from({ length: count }, (_, i) => ({
-    event: { id: String(i), title: `Event ${i}`, start: "2026-01-01", source_platform: "lemonade" },
+    event: {
+      id: String(startIndex + i),
+      title: `Event ${startIndex + i}`,
+      start: "2026-01-01",
+      source_platform: "lemonade",
+    },
   })),
 });
 
@@ -93,7 +98,7 @@ describe("useAtlasSearch", () => {
     expect(result.current.hasNext).toBe(true);
 
     mockSearchEvents.mockResolvedValueOnce({
-      ...makeResult(2, false),
+      ...makeResult(2, false, 3),
       page: 2,
     });
 

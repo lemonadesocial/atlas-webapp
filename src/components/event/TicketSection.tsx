@@ -12,6 +12,7 @@ interface TicketSectionProps {
   isExternal: boolean;
   externalUrl?: string;
   externalPlatform?: string;
+  eventEnd?: string;
 }
 
 type PurchaseState =
@@ -31,7 +32,9 @@ export function TicketSection({
   isExternal,
   externalUrl,
   externalPlatform,
+  eventEnd,
 }: TicketSectionProps) {
+  const isExpired = eventEnd ? new Date(eventEnd) < new Date() : false;
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("idle");
   const [hold, setHold] = useState<PurchaseHold | null>(null);
@@ -181,6 +184,16 @@ export function TicketSection({
       setPurchaseState("error");
     }
   };
+
+  // Expired events — no purchase UI
+  if (isExpired) {
+    return (
+      <div className="rounded-lg border border-card-border bg-card p-6">
+        <h3 className="text-lg font-semibold text-primary">Tickets</h3>
+        <p className="mt-3 text-sm text-secondary">This event has already ended.</p>
+      </div>
+    );
+  }
 
   // External events
   if (isExternal) {

@@ -100,7 +100,11 @@ export default function OnboardDone() {
         {/* CTAs */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href={state.atlasSpaceId ? `/discover?space=${state.atlasSpaceId}` : "/discover"}
+            href={
+              state.atlasSpaceId
+                ? `/discover?space=${state.atlasSpaceId}${state.spaceName ? `&space_name=${encodeURIComponent(state.spaceName)}` : ""}`
+                : "/discover"
+            }
             className="rounded-md bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
           >
             {STRINGS.viewYourEvents}

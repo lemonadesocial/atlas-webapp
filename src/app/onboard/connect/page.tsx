@@ -17,8 +17,8 @@ const SUBMIT_API_KEY_MUTATION = `mutation($input: SubmitApiKeyInput!) {
   submitApiKey(input: $input) { id connectorType status enabled }
 }`;
 
-const SPACE_CONNECTIONS_QUERY = `query($space: MongoID!) {
-  spaceConnections(space: $space) { id connectorType status lastSyncAt lastSyncStatus enabled errorMessage }
+const SPACE_CONNECTIONS_QUERY = `query($spaceId: String!) {
+  spaceConnections(spaceId: $spaceId) { id connectorType status lastSyncAt lastSyncStatus enabled errorMessage }
 }`;
 
 interface ConnectorState {
@@ -72,7 +72,7 @@ export default function OnboardStep4() {
     try {
       const res = await graphqlRequest<{
         spaceConnections: SpaceConnection[];
-      }>(SPACE_CONNECTIONS_QUERY, { space: state.spaceId });
+      }>(SPACE_CONNECTIONS_QUERY, { spaceId: state.spaceId });
       const connections = res.data?.spaceConnections ?? [];
       for (const conn of connections) {
         if (conn.connectorType === "eventbrite" && conn.enabled) {
@@ -102,7 +102,7 @@ export default function OnboardStep4() {
       const res = await graphqlRequest<{
         connectPlatform: ConnectPlatformResult;
       }>(CONNECT_PLATFORM_MUTATION, {
-        input: { space: state.spaceId, connectorType: "eventbrite" },
+        input: { spaceId: state.spaceId, connectorType: "eventbrite" },
       });
       const result = res.data?.connectPlatform;
       if (result?.authUrl) {
@@ -130,7 +130,7 @@ export default function OnboardStep4() {
       const res = await graphqlRequest<{
         connectPlatform: ConnectPlatformResult;
       }>(CONNECT_PLATFORM_MUTATION, {
-        input: { space: state.spaceId, connectorType: "luma" },
+        input: { spaceId: state.spaceId, connectorType: "luma" },
       });
       const result = res.data?.connectPlatform;
       if (result?.requiresApiKey) {

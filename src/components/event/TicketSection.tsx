@@ -188,10 +188,7 @@ export function TicketSection({
   // Expired events — no purchase UI
   if (isExpired) {
     return (
-      <div className="rounded-lg border border-card-border bg-card p-6">
-        <h3 className="text-lg font-semibold text-primary">Tickets</h3>
-        <p className="mt-3 text-sm text-secondary">This event has already ended.</p>
-      </div>
+      <p className="text-sm text-secondary">This event has already ended.</p>
     );
   }
 

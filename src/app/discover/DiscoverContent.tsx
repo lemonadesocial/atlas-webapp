@@ -142,7 +142,16 @@ export function DiscoverContent() {
       sort: "date_desc",
       per_page: RECENTLY_HAPPENED_LIMIT,
     })
-      .then((data) => setRecentPast(data.results))
+      .then((data) => {
+          const seen = new Set<string>();
+          const unique = data.results.filter((item) => {
+            const id = item.event.id || item.event.source_id;
+            if (!id || seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+          setRecentPast(unique);
+        })
       .catch(() => setRecentPast([]))
       .finally(() => setRecentPastLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

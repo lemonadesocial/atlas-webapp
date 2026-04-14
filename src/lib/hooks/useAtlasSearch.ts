@@ -62,7 +62,14 @@ export function useAtlasSearch() {
         page: nextPage,
         per_page: 12,
       });
-      setResults((prev) => [...prev, ...data.results]);
+      setResults((prev) => {
+        const seen = new Set(prev.map((item) => item.event.id || item.event.source_id));
+        const fresh = data.results.filter((item) => {
+          const id = item.event.id || item.event.source_id;
+          return id && !seen.has(id);
+        });
+        return [...prev, ...fresh];
+      });
       setPage(data.page);
       setHasNext(data.has_next);
       setTotalResults(data.total_results);

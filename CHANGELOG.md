@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.0](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.4...v1.1.0) (2026-04-14)
+
+
+### Features
+
+* add recently happened section and past events filter on discover page ([2a913e5](https://github.com/lemonadesocial/atlas-webapp/commit/2a913e5c10e3b2ff297e1b6d0c91061a3f428be4))
+* rewrite chat to use lemonade-ai GraphQL run mutation ([9b445a9](https://github.com/lemonadesocial/atlas-webapp/commit/9b445a9c2705b2792525fa0496fdced0ae536f34))
+* rewrite chat to use lemonade-ai GraphQL run mutation ([6496836](https://github.com/lemonadesocial/atlas-webapp/commit/6496836d2a8897b062e90dfee3094d55c2f5eaab))
+* support atlas space onboarding and scoped discover ([6bd4137](https://github.com/lemonadesocial/atlas-webapp/commit/6bd413767296d37315a79fd68a84bc945ddd4713))
+
+
+### Bug Fixes
+
+* deduplicate results in recently-happened section and loadMore ([23c2422](https://github.com/lemonadesocial/atlas-webapp/commit/23c242215c3b097e9656972f4c593f0775284867))
+* handle missing leaderboard and chat backends gracefully ([d192ff0](https://github.com/lemonadesocial/atlas-webapp/commit/d192ff03eb86197bf2d0838dc3439de8871d5f58))
+* handle non-ISO currencies and stablecoins in formatPrice ([80c53f9](https://github.com/lemonadesocial/atlas-webapp/commit/80c53f91510c01c9ea37711edd7739345d539efe))
+* hide ticket purchase UI for expired events ([170cdeb](https://github.com/lemonadesocial/atlas-webapp/commit/170cdeb1dcf330fbcb4fc51d1763d48bd01cd476))
+* map ticket types from Atlas format and add Idempotency-Key header ([210def3](https://github.com/lemonadesocial/atlas-webapp/commit/210def38245968f8627e3f6c4cba48d6db75a3fc))
+* prefer atlas:source_ticket_type_id for purchase requests ([20be2c6](https://github.com/lemonadesocial/atlas-webapp/commit/20be2c6e4ee8ce2b8e5410c9e6ce6988c0ebfeff))
+* refine atlas discover space filter flow ([284358e](https://github.com/lemonadesocial/atlas-webapp/commit/284358e903368123ef548bda0bcf47ecc080284d))
+* render expired event message inline, without card wrapper ([9c0550f](https://github.com/lemonadesocial/atlas-webapp/commit/9c0550fb2a198d9e54abb89b610c8846bb439c56))
+* right-align expired event message on large screens ([c3493f7](https://github.com/lemonadesocial/atlas-webapp/commit/c3493f7c1a2b50f5859c1709222283cc7b67d0af))
+
 ## [1.0.4](https://github.com/lemonadesocial/atlas-webapp/compare/v1.0.3...v1.0.4) (2026-04-01)
 
 

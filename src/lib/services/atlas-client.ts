@@ -1,5 +1,10 @@
 import { getRegistryUrl } from "@/lib/utils/constants";
-import type { AtlasEvent, AtlasSearchParams, AtlasSearchResult } from "@/lib/types/atlas";
+import type {
+  AtlasEvent,
+  AtlasSearchParams,
+  AtlasSearchResult,
+  AtlasSpaceEnsureResponse,
+} from "@/lib/types/atlas";
 
 async function registryFetch<T>(
   path: string,
@@ -18,6 +23,12 @@ async function registryFetch<T>(
   }
   const json = await res.json();
   return json["atlas:search_result"] ?? json;
+}
+
+function extractRegistryErrorMessage(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const error = (payload as { error?: { message?: string } }).error;
+  return typeof error?.message === "string" ? error.message : null;
 }
 
 // Map Schema.org event format from the API to the flat AtlasEvent format the UI expects
@@ -89,6 +100,29 @@ export async function searchEvents(
   }
 
   return result;
+}
+
+export async function ensureAtlasSpace(
+  lemonadeSpaceId: string
+): Promise<AtlasSpaceEnsureResponse> {
+  const res = await fetch(`${getRegistryUrl()}/atlas/v1/spaces/ensure`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Atlas-Version": "1.0",
+    },
+    body: JSON.stringify({ lemonade_space_id: lemonadeSpaceId }),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  const json = (await res.json()) as unknown;
+  if (!res.ok) {
+    throw new Error(
+      extractRegistryErrorMessage(json) || `Registry API error: ${res.status}`
+    );
+  }
+
+  return json as AtlasSpaceEnsureResponse;
 }
 
 export async function getStatsFallback(): Promise<{

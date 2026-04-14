@@ -26,6 +26,7 @@ export interface AtlasEvent {
 }
 
 export interface AtlasSearchParams {
+  space?: string;
   q?: string;
   lat?: number;
   lng?: number;
@@ -167,9 +168,20 @@ export interface LeaderboardResponse {
 export interface OnboardingState {
   currentStep: number;
   spaceId?: string;
+  atlasSpaceId?: string;
+  atlasSpaceStatus?: string;
   spaceName?: string;
   stripeConnected?: boolean;
   stripeSkipped?: boolean;
   connectedPlatforms?: string[];
   importedEventCount?: number;
+}
+
+export interface AtlasSpaceEnsureResponse {
+  atlas_space_id: string;
+  lemonade_space_id: string;
+  status: string;
+  source_type: string;
+  name: string;
+  created: boolean;
 }

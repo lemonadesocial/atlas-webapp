@@ -48,7 +48,7 @@ describe("graphqlRequest", () => {
       json: () => Promise.resolve({ data: {} }),
     });
 
-    await graphqlRequest("mutation($input: AISpaceInput!) { aiCreateSpace(input: $input) { _id } }", {
+    await graphqlRequest("mutation($input: SpaceInput!) { createSpace(input: $input) { _id } }", {
       input: { title: "Test Space" },
     });
 

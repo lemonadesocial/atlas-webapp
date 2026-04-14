@@ -10,7 +10,7 @@ import { STRINGS, LEMONADE_APP_URL } from "@/lib/utils/constants";
 
 export default function OnboardDone() {
   const { user, loading: authLoading } = useAuth();
-  const { state, reset } = useOnboarding();
+  const { state } = useOnboarding();
   const router = useRouter();
 
   useEffect(() => {
@@ -100,8 +100,11 @@ export default function OnboardDone() {
         {/* CTAs */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href={state.spaceId ? `/discover?space=${state.spaceId}` : "/discover"}
-            onClick={() => reset()}
+            href={
+              state.atlasSpaceId
+                ? `/discover?space=${state.atlasSpaceId}${state.spaceName ? `&space_name=${encodeURIComponent(state.spaceName)}` : ""}`
+                : "/discover"
+            }
             className="rounded-md bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
           >
             {STRINGS.viewYourEvents}

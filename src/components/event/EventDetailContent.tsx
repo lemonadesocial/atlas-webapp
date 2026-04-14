@@ -230,6 +230,7 @@ export function EventDetailContent({ eventId }: Props) {
             isExternal={isExternal}
             externalUrl={event.source?.url || event.url}
             externalPlatform={event.source?.platform || event.source_platform}
+            eventEnd={event.end}
           />
         </div>
       </div>

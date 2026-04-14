@@ -72,7 +72,10 @@ export const DATE_FILTERS = [
   { value: "weekend", label: "This Weekend" },
   { value: "week", label: "This Week" },
   { value: "month", label: "This Month" },
+  { value: "past", label: "Past Events" },
 ] as const;
+
+export const RECENTLY_HAPPENED_LIMIT = 10;
 
 export const PRICE_MODES = [
   { value: "", label: "Any Price" },
@@ -113,6 +116,7 @@ export const STRINGS = {
   supportedPlatforms: ["Lemonade", "Eventbrite", "Lu.ma"],
   searchPlaceholder: "Search events...",
   noEventsFound: "No events found. Try a different search.",
+  recentlyHappened: "Recently happened",
   loadMore: "Load more",
   showingResults: (shown: number, total: number) =>
     `Showing ${shown} of ${total} events`,

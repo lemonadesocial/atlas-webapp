@@ -50,8 +50,8 @@ export function ChatContainer({ className = "", inputRef }: ChatContainerProps) 
         aria-label="Chat messages"
       >
         {isEmpty ? (
-          <div className="flex h-full flex-col items-center justify-center">
-            <div className="mb-4 text-center">
+          <div className="flex h-full flex-col items-center justify-center px-6 sm:px-8">
+            <div className="mb-4 max-w-sm text-center">
               <h2 className="text-lg font-semibold text-primary font-display">
                 Atlas Chat
               </h2>

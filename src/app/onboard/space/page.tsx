@@ -5,18 +5,19 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useOnboarding } from "@/lib/hooks/useOnboarding";
 import { graphqlRequest } from "@/lib/services/graphql-client";
+import { ensureAtlasSpace } from "@/lib/services/atlas-client";
 import { STRINGS } from "@/lib/utils/constants";
 import { OnboardLayout } from "@/components/onboard/OnboardLayout";
 import type { Space } from "@/lib/types/atlas";
 
 const LIST_SPACES_QUERY = `query($limit: Int, $skip: Int) {
-  aiListMySpaces(limit: $limit, skip: $skip) {
+  listMySpaces(limit: $limit, skip: $skip) {
     items { _id title slug description }
   }
 }`;
 
-const CREATE_SPACE_MUTATION = `mutation($input: AISpaceInput!) {
-  aiCreateSpace(input: $input) { _id title slug }
+const CREATE_SPACE_MUTATION = `mutation($input: SpaceInput!) {
+  createSpace(input: $input) { _id title slug }
 }`;
 
 export default function OnboardStep2() {
@@ -31,6 +32,7 @@ export default function OnboardStep2() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [preparingSpace, setPreparingSpace] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,9 +45,9 @@ export default function OnboardStep2() {
     setError(null);
     try {
       const res = await graphqlRequest<{
-        aiListMySpaces: { items: Space[] };
+        listMySpaces: { items: Space[] };
       }>(LIST_SPACES_QUERY, { limit: 50, skip: 0 });
-      const items = res.data?.aiListMySpaces?.items ?? [];
+      const items = res.data?.listMySpaces?.items ?? [];
       setSpaces(items);
       if (items.length === 1) {
         setSelectedId(items[0]._id);
@@ -69,9 +71,9 @@ export default function OnboardStep2() {
     setError(null);
     try {
       const res = await graphqlRequest<{
-        aiCreateSpace: Space;
+        createSpace: Space;
       }>(CREATE_SPACE_MUTATION, { input: { title: newTitle.trim() } });
-      const space = res.data?.aiCreateSpace;
+      const space = res.data?.createSpace;
       if (space) {
         setSpaces((prev) => [...prev, space]);
         setSelectedId(space._id);
@@ -85,15 +87,26 @@ export default function OnboardStep2() {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedId) return;
+    setPreparingSpace(true);
+    setError(null);
     const space = spaces.find((s) => s._id === selectedId);
-    updateState({
-      currentStep: 3,
-      spaceId: selectedId,
-      spaceName: space?.title,
-    });
-    goToStep(3);
+    try {
+      const atlasSpace = await ensureAtlasSpace(selectedId);
+      updateState({
+        currentStep: 3,
+        spaceId: selectedId,
+        atlasSpaceId: atlasSpace.atlas_space_id,
+        atlasSpaceStatus: atlasSpace.status,
+        spaceName: space?.title,
+      });
+      goToStep(3);
+    } catch {
+      setError("Failed to prepare this space for Atlas. Please try again.");
+    } finally {
+      setPreparingSpace(false);
+    }
   };
 
   if (authLoading || !user) {
@@ -211,10 +224,10 @@ export default function OnboardStep2() {
 
           <button
             onClick={handleContinue}
-            disabled={!selectedId}
+            disabled={!selectedId || preparingSpace}
             className="mt-2 w-full rounded-md bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
-            Continue
+            {preparingSpace ? "Preparing Atlas Space..." : "Continue"}
           </button>
         </div>
       )}

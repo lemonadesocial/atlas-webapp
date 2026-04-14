@@ -42,6 +42,7 @@ export function DiscoverContent() {
   const initializedRef = useRef(false);
   const [recentPast, setRecentPast] = useState<AtlasSearchResultItem[]>([]);
   const [recentPastLoading, setRecentPastLoading] = useState(false);
+  const spaceFilter = searchParams.get("space") || "";
   const [filters, setFilters] = useState<FilterValues>(() => ({
     dateFilter: searchParams.get("date") || "",
     city: searchParams.get("city") || "",
@@ -90,11 +91,15 @@ export function DiscoverContent() {
   const doSearch = useCallback(
     (query?: string) => {
       const q = query ?? searchParams.get("q") ?? "";
-      const params = buildSearchParams(q, filters);
+      const params = {
+        ...buildSearchParams(q, filters),
+        space: spaceFilter || undefined,
+      };
       search(params);
 
       // Update URL
       const urlParams = new URLSearchParams();
+      if (spaceFilter) urlParams.set("space", spaceFilter);
       if (q) urlParams.set("q", q);
       if (filters.city) urlParams.set("city", filters.city);
       if (filters.dateFilter) urlParams.set("date", filters.dateFilter);
@@ -113,7 +118,7 @@ export function DiscoverContent() {
       const qs = urlParams.toString();
       router.replace(`/discover${qs ? `?${qs}` : ""}`, { scroll: false });
     },
-    [searchParams, filters, buildSearchParams, search, router]
+    [searchParams, filters, buildSearchParams, search, router, spaceFilter]
   );
 
   // M7: Single effect handles both initial load and filter changes
@@ -128,7 +133,7 @@ export function DiscoverContent() {
   // Fetch recently-happened events only when in the fully default state (no query, no filters)
   useEffect(() => {
     const q = searchParams.get("q") ?? "";
-    if (!isDefaultState(q, filters)) {
+    if (spaceFilter || !isDefaultState(q, filters)) {
       setRecentPast([]);
       return;
     }
@@ -155,7 +160,7 @@ export function DiscoverContent() {
       .catch(() => setRecentPast([]))
       .finally(() => setRecentPastLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, searchParams]);
+  }, [filters, searchParams, spaceFilter]);
 
   const mapCenter =
     filters.lat && filters.lng
@@ -179,6 +184,12 @@ export function DiscoverContent() {
         onChange={setFilters}
         onClear={() => setFilters(DEFAULT_FILTERS)}
       />
+
+      {spaceFilter && (
+        <div className="rounded-md border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-primary">
+          Showing events from one Atlas space.
+        </div>
+      )}
 
       {view === "grid" ? (
         <EventGrid

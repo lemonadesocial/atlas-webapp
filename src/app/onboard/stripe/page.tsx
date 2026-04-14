@@ -14,7 +14,7 @@ const STRIPE_LINK_MUTATION = `mutation($return_url: String!, $refresh_url: Strin
 }`;
 
 const STRIPE_STATUS_QUERY = `query {
-  aiGetMe { stripe_connected_account { account_id connected } }
+  getMe { stripe_connected_account { account_id connected } }
 }`;
 
 function StripeContent() {
@@ -48,10 +48,10 @@ function StripeContent() {
     if (!user) return;
     setChecking(true);
     graphqlRequest<{
-      aiGetMe: { stripe_connected_account?: { account_id: string; connected: boolean } };
+      getMe: { stripe_connected_account?: { account_id: string; connected: boolean } };
     }>(STRIPE_STATUS_QUERY)
       .then((res) => {
-        const connected = res.data?.aiGetMe?.stripe_connected_account?.connected ?? false;
+        const connected = res.data?.getMe?.stripe_connected_account?.connected ?? false;
         setStripeConnected(connected);
         if (connected) {
           updateState({ stripeConnected: true });
@@ -79,9 +79,9 @@ function StripeContent() {
       }
       try {
         const res = await graphqlRequest<{
-          aiGetMe: { stripe_connected_account?: { connected: boolean } };
+          getMe: { stripe_connected_account?: { connected: boolean } };
         }>(STRIPE_STATUS_QUERY);
-        const connected = res.data?.aiGetMe?.stripe_connected_account?.connected ?? false;
+        const connected = res.data?.getMe?.stripe_connected_account?.connected ?? false;
         if (connected) {
           if (pollRef.current) clearInterval(pollRef.current);
           pollRef.current = null;

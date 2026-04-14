@@ -188,7 +188,7 @@ export function TicketSection({
   // Expired events — no purchase UI
   if (isExpired) {
     return (
-      <p className="text-sm text-secondary">This event has already ended.</p>
+      <p className="text-sm text-secondary lg:text-right">This event has already ended.</p>
     );
   }
 
